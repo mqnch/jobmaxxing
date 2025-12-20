@@ -1,1 +1,1 @@
-get an internship you lazy chud.
+get an internship you lazy chud
