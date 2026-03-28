@@ -318,7 +318,7 @@ export default function JobsPage() {
                 return (
                   <div
                     key={job.id}
-                    className="animate-fade-in-up"
+                    className="animate-fade-in-up h-full"
                     style={{
                       animationDelay: `${index * 0.05}s`,
                       animationFillMode: 'both',

@@ -197,7 +197,7 @@ export default function JobCard({
   }
 
   return (
-    <div className="p-6 rounded-lg border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.1)] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1">
+    <div className="h-full p-6 rounded-lg border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.1)] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1">
       <div className="flex flex-col h-full">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
