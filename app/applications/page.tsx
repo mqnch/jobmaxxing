@@ -312,39 +312,49 @@ export default function ApplicationsPage() {
               <thead>
                 <tr className="border-b border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)]">
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
                     onClick={() => handleSort('company')}
                   >
-                    Company <SortIcon column="company" />
+                    <div className="flex items-center gap-1">
+                      Company <SortIcon column="company" />
+                    </div>
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
                     onClick={() => handleSort('role')}
                   >
-                    Role <SortIcon column="role" />
+                    <div className="flex items-center gap-1">
+                      Role <SortIcon column="role" />
+                    </div>
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5]">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] whitespace-nowrap">
                     Location
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
                     onClick={() => handleSort('status')}
                   >
-                    Status <SortIcon column="status" />
+                    <div className="flex items-center gap-1">
+                      Status <SortIcon column="status" />
+                    </div>
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
                     onClick={() => handleSort('applied_at')}
                   >
-                    Date Applied <SortIcon column="applied_at" />
+                    <div className="flex items-center gap-1">
+                      Date Applied <SortIcon column="applied_at" />
+                    </div>
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors"
+                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
                     onClick={() => handleSort('last_heard_at')}
                   >
-                    Last Heard <SortIcon column="last_heard_at" />
+                    <div className="flex items-center gap-1">
+                      Last Heard <SortIcon column="last_heard_at" />
+                    </div>
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5]">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
