@@ -88,6 +88,35 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
     const rowRegex = /<tr>[\s\S]*?<\/tr>/gi
     const rows = tableHtml.match(rowRegex) || []
 
+    if (rows.length < 2) {
+      continue
+    }
+
+    const headerRow = rows[0] || ''
+    const headerCellRegex = /<th[^>]*>([\s\S]*?)<\/th>/gi
+    const headers: string[] = []
+    let headerMatch
+
+    while ((headerMatch = headerCellRegex.exec(headerRow)) !== null) {
+      headers.push(stripHtml(headerMatch[1]).trim())
+    }
+
+    const companyIndex = headers.findIndex(h => h.toLowerCase() === 'company')
+    const roleIndex = headers.findIndex(h => h.toLowerCase() === 'role')
+    const locationIndex = headers.findIndex(h => h.toLowerCase() === 'location')
+    const applicationIndex = headers.findIndex(h => h.toLowerCase() === 'application')
+    const ageIndex = headers.findIndex(h => h.toLowerCase() === 'age')
+    const termsIndex = headers.findIndex(h => h.toLowerCase() === 'terms')
+    const notesIndex = headers.findIndex(h => h.toLowerCase().includes('note'))
+
+    const compIdx = companyIndex !== -1 ? companyIndex : 0
+    const roleIdx = roleIndex !== -1 ? roleIndex : 1
+    const locIdx = locationIndex !== -1 ? locationIndex : 2
+    const appIdx = applicationIndex !== -1 ? applicationIndex : 3
+    const ageIdx = ageIndex !== -1 ? ageIndex : 4
+    const notesIdx = notesIndex !== -1 ? notesIndex : 5
+    const termsIdx = termsIndex !== -1 ? termsIndex : -1
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i]
 
@@ -99,18 +128,20 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
         cells.push(match[1])
       }
 
-      if (cells.length < 4) {
+      const maxIdx = Math.max(compIdx, roleIdx, locIdx, appIdx, ageIdx, notesIdx, termsIdx)
+      if (cells.length <= maxIdx && cells.length < 4) {
         continue
       }
 
-      const companyHtml = cells[0] || ''
-      const roleHtml = cells[1] || ''
-      const locationHtml = cells[2] || ''
-      const applicationHtml = cells[3] || ''
-      const ageHtml = cells[4] || ''
-      const notesHtml = cells[5] || ''
+      const companyHtml = cells[compIdx] || ''
+      const roleHtml = cells[roleIdx] || ''
+      const locationHtml = locIdx !== -1 ? (cells[locIdx] || '') : ''
+      const applicationHtml = cells[appIdx] || ''
+      const ageHtml = ageIdx !== -1 ? (cells[ageIdx] || '') : ''
+      const notesHtml = notesIdx !== -1 ? (cells[notesIdx] || '') : ''
+      const termsHtml = termsIdx !== -1 ? (cells[termsIdx] || '') : ''
 
-      const is_trending = companyHtml.includes('🔥') || companyHtml.includes('🔥')
+      const is_trending = companyHtml.includes('🔥')
 
       let company = ''
       
@@ -140,7 +171,11 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
         }
       }
 
-      const role = stripHtml(roleHtml)
+      let role = stripHtml(roleHtml)
+      const terms = termsHtml ? stripHtml(termsHtml).trim() : ''
+      if (terms) {
+        role = `${role} (${terms})`
+      }
 
       let location = stripHtml(locationHtml)
       

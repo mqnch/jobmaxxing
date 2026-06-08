@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runSync } from '@/lib/sync'
 
-export async function POST(request: NextRequest) {
+export const runtime = 'nodejs'
+
+export async function GET(request: NextRequest) {
   try {
-    const syncSecret = request.headers.get('x-sync-secret')
-    if (!syncSecret || syncSecret !== process.env.SYNC_SECRET) {
+    const authHeader = request.headers.get('authorization')
+    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`
+    
+    if (!authHeader || authHeader !== expectedAuth) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -14,7 +18,7 @@ export async function POST(request: NextRequest) {
     const stats = await runSync()
     return NextResponse.json(stats)
   } catch (error) {
-    console.error('Sync error:', error)
+    console.error('Cron sync error:', error)
     
     if (error instanceof Error && error.message.includes('Database schema error')) {
       return NextResponse.json(
