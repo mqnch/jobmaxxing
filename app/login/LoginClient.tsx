@@ -34,13 +34,13 @@ export default function LoginClient() {
     }
   }
 
-  const handleOAuthSignIn = async (provider: 'google' | 'azure') => {
+  const handleGoogleSignIn = async () => {
     setLoading(true)
     setMessage('')
 
     const supabase = createClient()
     const { error } = await supabase.auth.signInWithOAuth({
-      provider,
+      provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`,
       },
@@ -110,12 +110,12 @@ export default function LoginClient() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <button
               type="button"
-              onClick={() => handleOAuthSignIn('google')}
+              onClick={handleGoogleSignIn}
               disabled={loading}
-              className="flex items-center justify-center gap-2 py-2.5 px-4 border border-[rgba(255,255,255,0.1)] rounded-md bg-[#0a0a0a] text-sm font-medium text-[#f5f5f5] hover:bg-[rgba(255,255,255,0.05)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border border-[rgba(255,255,255,0.1)] rounded-md bg-[#0a0a0a] text-sm font-medium text-[#f5f5f5] hover:bg-[rgba(255,255,255,0.05)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -123,22 +123,7 @@ export default function LoginClient() {
                   d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.187 4.114-3.52 0-6.38-2.858-6.38-6.38s2.86-6.38 6.38-6.38c1.54 0 2.94.55 4.03 1.46l3.05-3.05C18.98 2.16 15.84 1 12.24 1 6.033 1 1 6.033 1 12.24s5.033 11.24 11.24 11.24c5.89 0 10.8-4.26 10.8-11.24 0-.67-.06-1.32-.17-1.955H12.24z"
                 />
               </svg>
-              Google
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleOAuthSignIn('azure')}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 py-2.5 px-4 border border-[rgba(255,255,255,0.1)] rounded-md bg-[#0a0a0a] text-sm font-medium text-[#f5f5f5] hover:bg-[rgba(255,255,255,0.05)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 23 23">
-                <path fill="#f35325" d="M0 0h11v11H0z" />
-                <path fill="#80bb1a" d="M12 0h11v11H12z" />
-                <path fill="#00a1f1" d="M0 12h11v11H0z" />
-                <path fill="#ffb900" d="M12 12h11v11H12z" />
-              </svg>
-              Microsoft
+              Sign in with Google
             </button>
           </div>
         </form>
