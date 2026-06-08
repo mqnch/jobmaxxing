@@ -216,7 +216,7 @@ export default function JobsPage() {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-[#f5f5f5] mb-2">
-          ☀️ Summer 2026 Internships
+          🍂 Fall 2026 Internships
         </h1>
         <p className="text-[#a0a0a0] mb-8">
           Browse available internship opportunities
