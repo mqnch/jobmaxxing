@@ -102,3 +102,33 @@ button[data-provider="microsoft"] {
   display: none !important;
 }
 
+@keyframes shrinkWidth {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-shrink-width {
+  animation: shrinkWidth 6s linear forwards;
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+
+.animate-slide-out-right {
+  animation: slideOutRight 0.4s ease-in forwards;
+}
+
+
+

@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useUser } from '@clerk/nextjs'
 import JobCard from '@/components/JobCard'
 import { hasPlayed, markPlayed } from '@/lib/animationState'
+import { formatDistanceToNowStrict } from 'date-fns'
 
 interface Job {
   id: string
@@ -44,6 +45,43 @@ export default function JobsPage() {
   const [animate, setAnimate] = useState(true)
   const limit = 50
 
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<{
+    type: 'success' | 'warning' | 'error'
+    message: string
+    stats?: {
+      inserted: number
+      updated: number
+      deactivated: number
+    }
+  } | null>(null)
+  const [isExiting, setIsExiting] = useState(false)
+
+  const showToast = (status: {
+    type: 'success' | 'warning' | 'error'
+    message: string
+    stats?: {
+      inserted: number
+      updated: number
+      deactivated: number
+    }
+  } | null) => {
+    setIsExiting(false)
+    setSyncStatus(status)
+  }
+
+  const handleCloseToast = () => {
+    setIsExiting(true)
+    setTimeout(() => {
+      setSyncStatus(null)
+      setIsExiting(false)
+    }, 400)
+  }
+
+  const [syncTrigger, setSyncTrigger] = useState(0)
+  const [initialFetchDone, setInitialFetchDone] = useState(false)
+  const [cacheTimestamp, setCacheTimestamp] = useState<string | null>(null)
+
   useEffect(() => {
     const stored = localStorage.getItem('lastJobsPageVisit')
     if (stored) {
@@ -62,7 +100,76 @@ export default function JobsPage() {
     } else {
       markPlayed('jobs')
     }
+
+    setCacheTimestamp(localStorage.getItem('jobs_cache_timestamp'))
   }, [])
+
+  useEffect(() => {
+    if (syncStatus && !isExiting) {
+      const timer = setTimeout(() => {
+        handleCloseToast()
+      }, 6000)
+      return () => clearTimeout(timer)
+    }
+  }, [syncStatus, isExiting])
+
+  const formatLastSynced = (timestampStr: string | null) => {
+    if (!timestampStr) return null
+    try {
+      const timestamp = parseInt(timestampStr, 10)
+      if (isNaN(timestamp)) return null
+      return formatDistanceToNowStrict(new Date(timestamp), { addSuffix: true })
+    } catch {
+      return null
+    }
+  }
+
+  const handleSyncLatest = async () => {
+    if (!user) {
+      showToast({
+        type: 'warning',
+        message: 'Please sign in to sync the latest internship jobs from GitHub.',
+      })
+      return
+    }
+
+    setIsSyncing(true)
+    try {
+      const response = await fetch('/api/jobs/sync', {
+        method: 'POST',
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.message || result.error || 'Failed to sync')
+      }
+
+      const stats = result.stats
+      showToast({
+        type: 'success',
+        message: 'Successfully synchronized the latest jobs from GitHub.',
+        stats: {
+          inserted: stats.inserted || 0,
+          updated: stats.updated || 0,
+          deactivated: stats.deactivated || 0,
+        },
+      })
+
+      const now = Date.now().toString()
+      localStorage.setItem('jobs_cache_timestamp', now)
+      setCacheTimestamp(now)
+      setSyncTrigger(prev => prev + 1)
+    } catch (error) {
+      console.error('Sync error:', error)
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'An error occurred while syncing jobs.',
+      })
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   const changeViewMode = (mode: 'card' | 'list') => {
     setViewMode(mode)
@@ -107,8 +214,43 @@ export default function JobsPage() {
 
   useEffect(() => {
     const fetchJobs = async () => {
-      setLoading(true)
+      const isDefaultView = !debouncedQuery.trim() && !showTrendingOnly
+      
+      let useCache = false
+      if (isDefaultView && !initialFetchDone && syncTrigger === 0) {
+        const cachedData = localStorage.getItem('jobs_cache_data')
+        const cachedTime = localStorage.getItem('jobs_cache_timestamp')
+        const cachedHasMore = localStorage.getItem('jobs_cache_has_more')
+
+        if (cachedData && cachedTime) {
+          try {
+            const parsed = JSON.parse(cachedData)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setJobs(parsed)
+              setHasMore(cachedHasMore === 'true')
+              useCache = true
+              
+              const ageInMs = Date.now() - parseInt(cachedTime, 10)
+              const cacheDuration = 5 * 60 * 1000 // 5 minutes
+              if (ageInMs < cacheDuration) {
+                setLoading(false)
+                setInitialFetchDone(true)
+                return
+              }
+            }
+          } catch (e) {
+            console.error('Failed to parse cached jobs:', e)
+          }
+        }
+      }
+
+      const isSilentUpdate = useCache
+      
+      if (!isSilentUpdate) {
+        setLoading(true)
+      }
       setOffset(0)
+      
       try {
         const params = new URLSearchParams()
         if (debouncedQuery.trim()) {
@@ -128,17 +270,28 @@ export default function JobsPage() {
         const data = await response.json()
         setJobs(data || [])
         setHasMore((data || []).length === limit)
+
+        if (isDefaultView) {
+          localStorage.setItem('jobs_cache_data', JSON.stringify(data || []))
+          const now = Date.now().toString()
+          localStorage.setItem('jobs_cache_timestamp', now)
+          setCacheTimestamp(now)
+          localStorage.setItem('jobs_cache_has_more', ((data || []).length === limit).toString())
+        }
       } catch (error) {
         console.error('Error fetching jobs:', error)
-        setJobs([])
-        setHasMore(false)
+        if (!isSilentUpdate) {
+          setJobs([])
+          setHasMore(false)
+        }
       } finally {
         setLoading(false)
+        setInitialFetchDone(true)
       }
     }
 
     fetchJobs()
-  }, [debouncedQuery, showTrendingOnly])
+  }, [debouncedQuery, showTrendingOnly, syncTrigger])
 
   const loadMore = async () => {
     if (loading || !hasMore) return
@@ -219,12 +372,38 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">
-          🍂 Fall 2026 Internships
-        </h1>
-        <p className="text-slate-500 mb-8 font-medium">
-          Browse available internship opportunities
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">
+              🍂 Fall 2026 Internships
+            </h1>
+            <p className="text-slate-500 font-medium">
+              Browse available internship opportunities
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSyncLatest}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-200/50 text-white text-sm font-semibold rounded-xl shadow-md disabled:shadow-none transition-all duration-200 border border-slate-850/50 disabled:cursor-not-allowed"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                />
+              </svg>
+              <span>Sync Manually</span>
+            </button>
+          </div>
+        </div>
 
         <div className={`mb-8 space-y-4 ${animate ? 'animate-fade-in-up' : ''}`}>
           <div className="relative">
@@ -407,6 +586,78 @@ export default function JobsPage() {
           </>
         )}
       </div>
+
+      {/* Toast Container */}
+      {syncStatus && (
+        <div className={`fixed bottom-5 right-5 z-50 bg-white/95 backdrop-blur-md border border-slate-200/80 shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4 rounded-2xl flex flex-col gap-3 max-w-sm w-96 overflow-hidden ${
+          isExiting ? 'animate-slide-out-right' : 'animate-slide-in-right'
+        }`}>
+          <div className="flex items-start gap-3">
+            {syncStatus.type === 'success' && (
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            )}
+            {syncStatus.type === 'warning' && (
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-600 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+            )}
+            {syncStatus.type === 'error' && (
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-rose-50 text-rose-600 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            )}
+            
+            <div className="flex-1 min-w-0 flex items-center h-8">
+              <p className="font-bold text-xs text-slate-900">
+                {syncStatus.type === 'success' ? 'Sync Complete' : syncStatus.type === 'warning' ? 'Attention Required' : 'Sync Failed'}
+              </p>
+            </div>
+            
+            <button
+              onClick={handleCloseToast}
+              className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 shrink-0 -mt-1 -mr-1"
+              aria-label="Close notification"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {syncStatus.stats && (
+            <div className="grid grid-cols-3 gap-2 mt-1 border-t border-slate-100 pt-3">
+              <div className="bg-emerald-50/50 rounded-xl p-2.5 text-center border border-emerald-100/50">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700/80 mb-0.5">Added</p>
+                <p className="text-base font-extrabold text-emerald-600">+{syncStatus.stats.inserted}</p>
+              </div>
+              <div className="bg-blue-50/50 rounded-xl p-2.5 text-center border border-blue-100/50">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-blue-700/80 mb-0.5">Updated</p>
+                <p className="text-base font-extrabold text-blue-600">{syncStatus.stats.updated}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-600/80 mb-0.5">Closed</p>
+                <p className="text-base font-extrabold text-slate-700">{syncStatus.stats.deactivated}</p>
+              </div>
+            </div>
+          )}
+          
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 rounded-b-2xl overflow-hidden">
+            <div 
+              className={`h-full animate-shrink-width ${
+                syncStatus.type === 'success' ? 'bg-emerald-500' : syncStatus.type === 'warning' ? 'bg-amber-500' : 'bg-rose-500'
+              }`}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
