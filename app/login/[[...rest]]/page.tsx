@@ -21,6 +21,8 @@ export default function LoginPage() {
             headerTitle: 'text-slate-900 font-bold',
             headerSubtitle: 'text-slate-500',
             socialButtonsBlockButton: 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg border-none shadow-none',
+            socialButtonsBlockButton__microsoft: 'hidden',
+            socialButtonsBlockButton__oauth_microsoft: 'hidden',
             socialButtonsBlockButtonText: 'text-slate-700 font-medium',
             dividerText: 'text-slate-400 bg-white',
             dividerLine: 'bg-slate-100',

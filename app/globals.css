@@ -93,3 +93,12 @@
   }
 }
 
+/* Hide Microsoft login button in Clerk */
+.cl-socialButtonsBlockButton__microsoft,
+.cl-socialButtonsBlockButton__oauth_microsoft,
+.cl-socialButtonsProviderIconButton__microsoft,
+.cl-socialButtonsProviderIconButton__oauth_microsoft,
+button[data-provider="microsoft"] {
+  display: none !important;
+}
+
