@@ -200,10 +200,10 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-[#f5f5f5] mb-2">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">
           🍂 Fall 2026 Internships
         </h1>
-        <p className="text-[#a0a0a0] mb-8">
+        <p className="text-slate-500 mb-8 font-medium">
           Browse available internship opportunities
         </p>
 
@@ -214,10 +214,10 @@ export default function JobsPage() {
               placeholder="Search by company, role, or location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 pl-10 bg-[#111111] border border-[rgba(255,255,255,0.1)] rounded-lg text-[#f5f5f5] placeholder-[#888888] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 pl-11 bg-slate-100/60 rounded-none text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white transition-all"
             />
             <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#888888]"
+              className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -234,17 +234,17 @@ export default function JobsPage() {
           <div className="flex flex-wrap items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
             <button
               onClick={() => setShowTrendingOnly(!showTrendingOnly)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors duration-200 ${
                 showTrendingOnly
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-[#111111] text-[#a0a0a0] border border-[rgba(255,255,255,0.1)] hover:bg-[rgba(255,255,255,0.05)]'
+                  ? 'bg-orange-600 text-white hover:bg-orange-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               🔥 Trending
             </button>
             
             <div className="flex items-center gap-2">
-              <span className="text-sm text-[#888888]">Sort by:</span>
+              <span className="text-sm text-slate-400 font-medium">Sort by:</span>
               <select
                 value={`${sortBy}-${sortOrder}`}
                 onChange={(e) => {
@@ -252,7 +252,7 @@ export default function JobsPage() {
                   setSortBy(by)
                   setSortOrder(order)
                 }}
-                className="px-3 py-2 bg-[#111111] border border-[rgba(255,255,255,0.1)] rounded-lg text-sm text-[#f5f5f5] focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="px-3 py-2 bg-slate-100/60 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:bg-white transition-all"
               >
                 <option value="date-desc">Date Posted (Newest)</option>
                 <option value="date-asc">Date Posted (Oldest)</option>
@@ -266,8 +266,8 @@ export default function JobsPage() {
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-[#a0a0a0]">Loading jobs...</p>
+              <div className="w-8 h-8 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-slate-500 font-medium">Loading jobs...</p>
             </div>
           </div>
         )}
@@ -275,12 +275,12 @@ export default function JobsPage() {
         {!loading && jobs.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
             <div className="text-6xl mb-4 animate-pulse-glow">🔍</div>
-            <h3 className="text-xl font-semibold text-[#f5f5f5] mb-2">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
               {debouncedQuery.trim()
                 ? 'No jobs found'
                 : 'No jobs available'}
             </h3>
-            <p className="text-[#a0a0a0] max-w-md">
+            <p className="text-slate-500 max-w-md font-medium">
               {debouncedQuery.trim()
                 ? 'Try adjusting your search terms or check back later.'
                 : 'Jobs will appear here after the sync is complete.'}
@@ -291,7 +291,7 @@ export default function JobsPage() {
         {!loading && sortedAndFilteredJobs.length > 0 && (
           <>
             <div className="mb-4 animate-fade-in">
-              <p className="text-sm text-[#888888]">
+              <p className="text-sm text-slate-400 font-medium">
                 Found {sortedAndFilteredJobs.length} {sortedAndFilteredJobs.length === 1 ? 'job' : 'jobs'}
                 {debouncedQuery.trim() && ` matching "${debouncedQuery}"`}
                 {showTrendingOnly && ' (trending)'}
@@ -347,7 +347,7 @@ export default function JobsPage() {
                 <button
                   onClick={loadMore}
                   disabled={loading}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-blue-500/50"
+                  className="px-6 py-3 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-800 disabled:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors duration-200"
                 >
                   {loading ? 'Loading...' : 'Load More'}
                 </button>

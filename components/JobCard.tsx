@@ -197,13 +197,13 @@ export default function JobCard({
   }
 
   return (
-    <div className="h-full p-6 rounded-lg border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] hover:bg-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.1)] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1">
+    <div className="h-full p-6 rounded-none bg-white hover:bg-slate-50/50 transition-all duration-200">
       <div className="flex flex-col h-full">
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-lg font-semibold text-[#f5f5f5]">
+                <h3 className="text-lg font-bold text-slate-800 tracking-tight">
                   {company}
                 </h3>
                 {is_trending && (
@@ -216,7 +216,7 @@ export default function JobCard({
                 )}
               </div>
               {(date_posted || created_at) && (
-                <p className="text-xs text-[#888888] mt-1">
+                <p className="text-xs text-slate-400 mt-1 font-medium">
                   Posted {formatDatePosted(date_posted || created_at)}
                 </p>
               )}
@@ -225,10 +225,10 @@ export default function JobCard({
               <button
                 onClick={handleSaveToggle}
                 disabled={isSaving}
-                className={`p-1.5 rounded transition-all duration-200 hover:scale-110 active:scale-95 ${
+                className={`p-1.5 rounded-full bg-slate-50 hover:bg-slate-100 transition-all duration-200 ${
                   isSaved
-                    ? 'text-yellow-400 hover:text-yellow-300'
-                    : 'text-[#888888] hover:text-[#a0a0a0]'
+                    ? 'text-yellow-500 hover:text-yellow-600'
+                    : 'text-slate-400 hover:text-slate-600'
                 } disabled:opacity-50`}
                 title={isSaved ? 'Unsave job' : 'Save job'}
               >
@@ -248,8 +248,14 @@ export default function JobCard({
               </button>
             )}
           </div>
-          <p className="text-base text-[#a0a0a0] mb-2">{role}</p>
-          <p className="text-sm text-[#888888] mb-4">{formatLocation(location)}</p>
+          <p className="text-base font-semibold text-slate-700 mb-2 leading-snug">{role}</p>
+          <p className="text-sm text-slate-500 mb-4 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>{formatLocation(location)}</span>
+          </p>
 
           {isAuthenticated ? (
             <div className="mb-4">
@@ -257,7 +263,7 @@ export default function JobCard({
                 value={status || 'not_applied'}
                 onChange={(e) => handleStatusChange(e.target.value)}
                 disabled={isUpdatingStatus}
-                className="w-full px-3 py-2 bg-[#111111] border border-[rgba(255,255,255,0.1)] rounded-md text-sm text-[#f5f5f5] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 bg-slate-100/60 rounded-none text-sm text-slate-800 font-semibold focus:outline-none focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -270,9 +276,9 @@ export default function JobCard({
             <div className="mb-4">
               <Link
                 href="/login"
-                className="text-xs text-[#888888] hover:text-[#a0a0a0] transition-colors"
+                className="text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors"
               >
-                Sign in to track
+                Sign in to track application
               </Link>
             </div>
           )}
@@ -281,7 +287,7 @@ export default function JobCard({
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 hover:scale-105 active:scale-95 hover:shadow-md hover:shadow-blue-500/50 w-fit"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-lg text-white bg-slate-900 hover:bg-slate-800 transition-all duration-200 w-fit"
         >
           <span>Apply</span>
           <svg

@@ -2,29 +2,28 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-hidden flex flex-col max-h-[calc(100vh-4rem)]">
+    <div className="h-[calc(100vh-4rem)] overflow-hidden flex flex-col max-h-[calc(100vh-4rem)] bg-gradient-to-b from-transparent to-slate-50/30">
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden min-h-0">
         <div className="max-w-5xl mx-auto w-full text-center py-4">
           <div className="mb-8 animate-fade-in-up inline-block">
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-[#f5f5f5] leading-tight tracking-tight">
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-slate-900 leading-tight tracking-tight">
               get a j*b.
             </h1>
-            <div className="mt-2 h-1 bg-blue-600 rounded-full animate-pulse-glow w-full"></div>
           </div>
 
           <div className="animate-fade-in-up-delay-1">
-            <p className="text-xl sm:text-2xl md:text-3xl text-[#a0a0a0] mb-3 font-light">
+            <p className="text-xl sm:text-2xl md:text-3xl text-slate-600 mb-3 font-medium tracking-tight">
               stop scrolling and start applying, chud.
             </p>
-            <p className="text-base sm:text-lg md:text-xl text-[#888888] mb-8 max-w-2xl mx-auto">
-              jobmaxxing aggregates internships from SimplifyJobs and helps you track your applications
+            <p className="text-base sm:text-lg md:text-xl text-slate-500 mb-8 max-w-2xl mx-auto">
+              jobmaxxing aggregates internships from SimplifyJobs and helps you track your applications.
             </p>
           </div>
 
           <div className="mb-10 animate-fade-in-up-delay-2">
             <Link
               href="/jobs"
-              className="inline-flex items-center gap-3 px-10 py-5 text-lg md:text-xl font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/50 active:scale-95"
+              className="inline-flex items-center gap-3 px-10 py-5 text-lg md:text-xl font-extrabold rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"
             >
               <span>start searching</span>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,7 +34,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="h-1 bg-gradient-to-r from-transparent via-blue-600 to-transparent opacity-30"></div>
+      <div className="h-[1px] bg-gradient-to-r from-transparent via-slate-400 to-transparent opacity-20"></div>
     </div>
   )
 }

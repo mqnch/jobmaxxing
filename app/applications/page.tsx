@@ -196,7 +196,7 @@ export default function ApplicationsPage() {
     if (sortColumn !== column) {
       return (
         <svg
-          className="w-4 h-4 inline ml-1 text-[#888888]"
+          className="w-4 h-4 inline ml-1 text-slate-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -212,7 +212,7 @@ export default function ApplicationsPage() {
     }
     return sortDirection === 'asc' ? (
       <svg
-        className="w-4 h-4 inline ml-1 text-blue-500"
+        className="w-4 h-4 inline ml-1 text-slate-800"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -226,7 +226,7 @@ export default function ApplicationsPage() {
       </svg>
     ) : (
       <svg
-        className="w-4 h-4 inline ml-1 text-blue-500"
+        className="w-4 h-4 inline ml-1 text-slate-800"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -248,18 +248,18 @@ export default function ApplicationsPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-[#f5f5f5] mb-2">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">
           My Applications
         </h1>
-        <p className="text-[#a0a0a0] mb-8">
+        <p className="text-slate-500 mb-8 font-medium">
           Your tracked internship applications will appear here
         </p>
 
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-[#a0a0a0]">Loading applications...</p>
+              <div className="w-8 h-8 border-4 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-slate-500 font-medium">Loading applications...</p>
             </div>
           </div>
         )}
@@ -267,16 +267,16 @@ export default function ApplicationsPage() {
         {!loading && applications.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
             <div className="text-6xl mb-4 animate-pulse-glow">📋</div>
-            <h3 className="text-xl font-semibold text-[#f5f5f5] mb-2">
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
               No saved jobs yet
             </h3>
-            <p className="text-[#a0a0a0] max-w-md mb-6">
+            <p className="text-slate-500 max-w-md mb-6 font-medium">
               Start tracking your internship applications by saving jobs from the
               jobs page.
             </p>
             <a
               href="/jobs"
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 hover:scale-105 active:scale-95 hover:shadow-lg hover:shadow-blue-500/50"
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold rounded-lg text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"
             >
               Browse Jobs
             </a>
@@ -284,12 +284,12 @@ export default function ApplicationsPage() {
         )}
 
         {!loading && applications.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-[rgba(255,255,255,0.1)] animate-fade-in-up">
+          <div className="overflow-x-auto rounded-none bg-white animate-fade-in-up">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.02)]">
+                <tr className="border-b border-slate-200 bg-slate-100">
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
+                    className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                     onClick={() => handleSort('company')}
                   >
                     <div className="flex items-center gap-1">
@@ -297,18 +297,18 @@ export default function ApplicationsPage() {
                     </div>
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
+                    className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                     onClick={() => handleSort('role')}
                   >
                     <div className="flex items-center gap-1">
                       Role <SortIcon column="role" />
                     </div>
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] whitespace-nowrap">
+                  <th className="text-left py-3 px-4 text-sm font-bold text-slate-700 whitespace-nowrap">
                     Location
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
+                    className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                     onClick={() => handleSort('status')}
                   >
                     <div className="flex items-center gap-1">
@@ -316,7 +316,7 @@ export default function ApplicationsPage() {
                     </div>
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
+                    className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                     onClick={() => handleSort('applied_at')}
                   >
                     <div className="flex items-center gap-1">
@@ -324,14 +324,14 @@ export default function ApplicationsPage() {
                     </div>
                   </th>
                   <th
-                    className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] cursor-pointer hover:bg-[rgba(255,255,255,0.05)] transition-colors whitespace-nowrap"
+                    className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                     onClick={() => handleSort('last_heard_at')}
                   >
                     <div className="flex items-center gap-1">
                       Last Heard <SortIcon column="last_heard_at" />
                     </div>
                   </th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[#f5f5f5] whitespace-nowrap">
+                  <th className="text-left py-3 px-4 text-sm font-bold text-slate-700 whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
@@ -340,17 +340,17 @@ export default function ApplicationsPage() {
                 {sortedApplications.map((app, index) => (
                   <tr
                     key={app.job_id}
-                    className="border-b border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.02)] transition-all duration-200 animate-fade-in"
+                    className="border-b border-slate-100 hover:bg-slate-50/50 transition-all duration-200 animate-fade-in"
                     style={{
                       animationDelay: `${index * 0.03}s`,
                       animationFillMode: 'both',
                     }}
                   >
-                    <td className="py-4 px-4 text-[#f5f5f5] font-medium">
+                    <td className="py-4 px-4 text-slate-900 font-bold">
                       {app.company}
                     </td>
-                    <td className="py-4 px-4 text-[#a0a0a0]">{app.role}</td>
-                    <td className="py-4 px-4 text-[#888888] text-sm">
+                    <td className="py-4 px-4 text-slate-700 font-semibold">{app.role}</td>
+                    <td className="py-4 px-4 text-slate-500 text-sm">
                       {app.location}
                     </td>
                     <td className="py-4 px-4">
@@ -359,7 +359,7 @@ export default function ApplicationsPage() {
                         onChange={(e) =>
                           handleStatusChange(app.job_id, e.target.value)
                         }
-                        className="px-3 py-1.5 bg-[#111111] border border-[rgba(255,255,255,0.1)] rounded-md text-sm text-[#f5f5f5] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                        className="px-3 py-1.5 bg-slate-100/60 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:bg-white transition-colors duration-200"
                       >
                         {STATUS_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -368,10 +368,10 @@ export default function ApplicationsPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="py-4 px-4 text-[#a0a0a0] text-sm">
+                    <td className="py-4 px-4 text-slate-600 text-sm font-medium">
                       {formatDate(app.applied_at)}
                     </td>
-                    <td className="py-4 px-4 text-[#a0a0a0] text-sm">
+                    <td className="py-4 px-4 text-slate-600 text-sm font-medium">
                       {formatDate(app.last_heard_at)}
                     </td>
                     <td className="py-4 px-4">
@@ -380,7 +380,7 @@ export default function ApplicationsPage() {
                           href={app.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 hover:scale-105 active:scale-95"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"
                         >
                           <span>Apply</span>
                           <svg
@@ -399,7 +399,7 @@ export default function ApplicationsPage() {
                         </a>
                         <button
                           onClick={() => handleRemove(app.job_id)}
-                          className="p-1.5 text-red-400 hover:text-red-300 hover:bg-[rgba(255,255,255,0.05)] rounded transition-all duration-200 hover:scale-110 active:scale-95"
+                          className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
                           title="Remove"
                         >
                           <svg

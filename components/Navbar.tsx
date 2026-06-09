@@ -9,32 +9,32 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <nav className="bg-[#111111] border-b border-[rgba(255,255,255,0.1)]">
+    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link
               href="/"
-              className="flex items-center px-2 py-2 text-[#f5f5f5] font-semibold hover:text-white transition-colors"
+              className="flex items-center px-2 py-2 text-slate-900 font-bold hover:text-slate-700 transition-colors text-lg tracking-tight"
             >
               jobmaxxing
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
                 href="/"
-                className="border-transparent text-[#a0a0a0] hover:text-[#f5f5f5] hover:border-[#f5f5f5] inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
+                className="border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
               >
                 Home
               </Link>
               <Link
                 href="/jobs"
-                className="border-transparent text-[#a0a0a0] hover:text-[#f5f5f5] hover:border-[#f5f5f5] inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
+                className="border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
               >
                 Jobs
               </Link>
               <Link
                 href="/applications"
-                className="border-transparent text-[#a0a0a0] hover:text-[#f5f5f5] hover:border-[#f5f5f5] inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
+                className="border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors"
               >
                 Applications
               </Link>
@@ -42,12 +42,12 @@ export default function Navbar() {
           </div>
           <div className="flex items-center">
             {!isLoaded ? (
-              <span className="text-[#a0a0a0] text-sm">Loading...</span>
+              <span className="text-slate-400 text-sm animate-pulse">Loading...</span>
             ) : (
               <>
                 <Show when="signed-in">
                   <div className="hidden sm:flex items-center space-x-4">
-                    <span className="text-[#a0a0a0] text-sm">
+                    <span className="text-slate-600 text-sm font-medium">
                       {user?.primaryEmailAddress?.emailAddress}
                     </span>
                     <UserButton />
@@ -56,7 +56,7 @@ export default function Navbar() {
                 <Show when="signed-out">
                   <Link
                     href="/login"
-                    className="hidden sm:block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="hidden sm:block bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors duration-200"
                   >
                     Login
                   </Link>
@@ -65,7 +65,7 @@ export default function Navbar() {
             )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="sm:hidden text-[#f5f5f5] p-2 rounded-md hover:bg-[#1a1a1a] transition-colors"
+              className="sm:hidden text-slate-700 p-2 rounded-md hover:bg-slate-100 transition-colors"
               aria-label="Toggle menu"
             >
               <svg
@@ -96,38 +96,38 @@ export default function Navbar() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="sm:hidden border-t border-[rgba(255,255,255,0.1)]">
+        <div className="sm:hidden border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-inner">
           <div className="px-2 pt-2 pb-3 space-y-1">
             <Link
               href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-[#a0a0a0] hover:text-[#f5f5f5] hover:bg-[#1a1a1a] rounded-md text-base font-medium transition-colors"
+              className="block px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md text-base font-medium transition-colors"
             >
               Home
             </Link>
             <Link
               href="/jobs"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-[#a0a0a0] hover:text-[#f5f5f5] hover:bg-[#1a1a1a] rounded-md text-base font-medium transition-colors"
+              className="block px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md text-base font-medium transition-colors"
             >
               Jobs
             </Link>
             <Link
               href="/applications"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 text-[#a0a0a0] hover:text-[#f5f5f5] hover:bg-[#1a1a1a] rounded-md text-base font-medium transition-colors"
+              className="block px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md text-base font-medium transition-colors"
             >
               Applications
             </Link>
             {!isLoaded ? (
-              <div className="px-3 py-2 text-[#a0a0a0] text-sm border-t border-[rgba(255,255,255,0.1)] mt-2 pt-2">
+              <div className="px-3 py-2 text-slate-400 text-sm border-t border-slate-200 mt-2 pt-2">
                 Loading...
               </div>
             ) : (
               <>
                 <Show when="signed-in">
-                  <div className="px-3 py-2 border-t border-[rgba(255,255,255,0.1)] mt-2 pt-2 flex items-center justify-between">
-                    <span className="text-[#a0a0a0] text-sm">
+                  <div className="px-3 py-2 border-t border-slate-200 mt-2 pt-2 flex items-center justify-between">
+                    <span className="text-slate-600 text-sm font-medium">
                       {user?.primaryEmailAddress?.emailAddress}
                     </span>
                     <UserButton />
@@ -137,7 +137,7 @@ export default function Navbar() {
                   <Link
                     href="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-base font-medium transition-colors mt-2"
+                    className="block px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-base font-semibold transition-colors mt-2"
                   >
                     Login
                   </Link>
