@@ -130,7 +130,7 @@ button[data-provider="microsoft"] {
   animation: slideOutRight 0.4s ease-in forwards;
 }
 
-/* Remove Clerk UserButton hover animation, scale, and background highlights */
+/* Remove Clerk UserButton hover animation, pseudo-elements, border/outline effects, and scale */
 .cl-userButtonTrigger,
 .cl-avatarBox,
 .cl-userButtonAvatarBox,
@@ -151,7 +151,30 @@ button[data-provider="microsoft"] {
   scale: 1 !important;
   background-color: transparent !important;
   box-shadow: none !important;
+  outline: none !important;
   opacity: 1 !important;
+  border-color: transparent !important;
+  border-width: 0 !important;
+}
+
+.cl-userButtonTrigger::before,
+.cl-userButtonTrigger::after,
+.cl-avatarBox::before,
+.cl-avatarBox::after,
+.cl-userButtonAvatarBox::before,
+.cl-userButtonAvatarBox::after,
+.cl-userButtonTrigger *::before,
+.cl-userButtonTrigger *::after,
+.cl-avatarBox *::before,
+.cl-avatarBox *::after,
+.cl-userButtonAvatarBox *::before,
+.cl-userButtonAvatarBox *::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  border: none !important;
+  animation: none !important;
+  transform: none !important;
 }
 
 
