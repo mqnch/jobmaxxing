@@ -1,40 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/browser'
+import { useState } from 'react'
+import { useUser, UserButton, Show } from '@clerk/nextjs'
 
 export default function Navbar() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { isLoaded, isSignedIn, user } = useUser()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const router = useRouter()
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      setLoading(false)
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
-    setMobileMenuOpen(false)
-  }
 
   return (
     <nav className="bg-[#111111] border-b border-[rgba(255,255,255,0.1)]">
@@ -69,25 +41,27 @@ export default function Navbar() {
             </div>
           </div>
           <div className="flex items-center">
-            {loading ? (
+            {!isLoaded ? (
               <span className="text-[#a0a0a0] text-sm">Loading...</span>
-            ) : user ? (
-              <div className="hidden sm:flex items-center space-x-4">
-                <span className="text-[#a0a0a0] text-sm">{user.email}</span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-[#111111] hover:bg-[#1a1a1a] text-[#f5f5f5] border border-[rgba(255,255,255,0.1)] px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
             ) : (
-              <Link
-                href="/login"
-                className="hidden sm:block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Login
-              </Link>
+              <>
+                <Show when="signed-in">
+                  <div className="hidden sm:flex items-center space-x-4">
+                    <span className="text-[#a0a0a0] text-sm">
+                      {user?.primaryEmailAddress?.emailAddress}
+                    </span>
+                    <UserButton />
+                  </div>
+                </Show>
+                <Show when="signed-out">
+                  <Link
+                    href="/login"
+                    className="hidden sm:block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Login
+                  </Link>
+                </Show>
+              </>
             )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -145,26 +119,30 @@ export default function Navbar() {
             >
               Applications
             </Link>
-            {user ? (
-              <>
-                <div className="px-3 py-2 text-[#a0a0a0] text-sm border-t border-[rgba(255,255,255,0.1)] mt-2 pt-2">
-                  {user.email}
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-3 py-2 text-[#f5f5f5] hover:bg-[#1a1a1a] rounded-md text-base font-medium transition-colors"
-                >
-                  Logout
-                </button>
-              </>
+            {!isLoaded ? (
+              <div className="px-3 py-2 text-[#a0a0a0] text-sm border-t border-[rgba(255,255,255,0.1)] mt-2 pt-2">
+                Loading...
+              </div>
             ) : (
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-base font-medium transition-colors mt-2"
-              >
-                Login
-              </Link>
+              <>
+                <Show when="signed-in">
+                  <div className="px-3 py-2 border-t border-[rgba(255,255,255,0.1)] mt-2 pt-2 flex items-center justify-between">
+                    <span className="text-[#a0a0a0] text-sm">
+                      {user?.primaryEmailAddress?.emailAddress}
+                    </span>
+                    <UserButton />
+                  </div>
+                </Show>
+                <Show when="signed-out">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-base font-medium transition-colors mt-2"
+                  >
+                    Login
+                  </Link>
+                </Show>
+              </>
             )}
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/browser'
+import { useUser } from '@clerk/nextjs'
 import JobCard from '@/components/JobCard'
 
 interface Job {
@@ -30,7 +30,7 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const [user, setUser] = useState<any>(null)
+  const { user, isLoaded } = useUser()
   const [userJobs, setUserJobs] = useState<Record<string, UserJob>>({})
   const [loadingUserJobs, setLoadingUserJobs] = useState(false)
   const [hasMore, setHasMore] = useState(true)
@@ -48,21 +48,6 @@ export default function JobsPage() {
     }
     const now = new Date().toISOString()
     localStorage.setItem('lastJobsPageVisit', now)
-  }, [])
-
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {

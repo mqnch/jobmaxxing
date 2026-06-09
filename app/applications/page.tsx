@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/browser'
+import { useUser } from '@clerk/nextjs'
 
 interface Application {
   job_id: string
@@ -53,33 +53,10 @@ function formatDate(dateString: string | null | undefined): string {
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const { user, isLoaded } = useUser()
   const [sortColumn, setSortColumn] = useState<SortColumn>('applied_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const router = useRouter()
-
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.push('/login')
-        return
-      }
-      setUser(user)
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) {
-        router.push('/login')
-      } else {
-        setUser(session.user)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [router])
 
   useEffect(() => {
     if (!user) return
