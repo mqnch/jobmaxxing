@@ -17,7 +17,7 @@ export default function Navbar() {
               href="/"
               className="flex items-center px-2 py-2 text-slate-900 font-bold hover:text-slate-700 transition-colors text-lg tracking-tight"
             >
-              jobmaxxing
+              getajobchud.com
             </Link>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
               <Link
