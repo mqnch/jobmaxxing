@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useUser } from '@clerk/nextjs'
 import JobCard from '@/components/JobCard'
+import { hasPlayed, markPlayed } from '@/lib/animationState'
 
 interface Job {
   id: string
@@ -40,6 +41,7 @@ export default function JobsPage() {
   const [showTrendingOnly, setShowTrendingOnly] = useState(false)
   const [lastVisitTimestamp, setLastVisitTimestamp] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
+  const [animate, setAnimate] = useState(true)
   const limit = 50
 
   useEffect(() => {
@@ -53,6 +55,12 @@ export default function JobsPage() {
     const savedViewMode = localStorage.getItem('jobsViewMode')
     if (savedViewMode === 'card' || savedViewMode === 'list') {
       setViewMode(savedViewMode)
+    }
+
+    if (hasPlayed('jobs')) {
+      setAnimate(false)
+    } else {
+      markPlayed('jobs')
     }
   }, [])
 
@@ -218,7 +226,7 @@ export default function JobsPage() {
           Browse available internship opportunities
         </p>
 
-        <div className="mb-8 space-y-4 animate-fade-in-up">
+        <div className={`mb-8 space-y-4 ${animate ? 'animate-fade-in-up' : ''}`}>
           <div className="relative">
             <input
               type="text"
@@ -242,7 +250,7 @@ export default function JobsPage() {
             </svg>
           </div>
           
-          <div className="flex flex-wrap items-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
+          <div className={`flex flex-wrap items-center gap-4 ${animate ? 'animate-fade-in-up' : ''}`} style={animate ? { animationDelay: '0.1s', animationFillMode: 'both' } : undefined}>
             <button
               onClick={() => setShowTrendingOnly(!showTrendingOnly)}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors duration-200 ${
@@ -315,7 +323,7 @@ export default function JobsPage() {
         )}
 
         {!loading && jobs.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
+          <div className={`flex flex-col items-center justify-center py-20 text-center ${animate ? 'animate-fade-in-up' : ''}`}>
             <div className="text-6xl mb-4 animate-pulse-glow">🔍</div>
             <h3 className="text-xl font-bold text-slate-800 mb-2">
               {debouncedQuery.trim()
@@ -332,7 +340,7 @@ export default function JobsPage() {
 
         {!loading && sortedAndFilteredJobs.length > 0 && (
           <>
-            <div className="mb-4 animate-fade-in">
+            <div className={`mb-4 ${animate ? 'animate-fade-in' : ''}`}>
               <p className="text-sm text-slate-400 font-medium">
                 Found {sortedAndFilteredJobs.length} {sortedAndFilteredJobs.length === 1 ? 'job' : 'jobs'}
                 {debouncedQuery.trim() && ` matching "${debouncedQuery}"`}
@@ -345,11 +353,11 @@ export default function JobsPage() {
                 return (
                   <div
                     key={job.id}
-                    className={`animate-fade-in-up ${viewMode === 'card' ? 'h-full' : 'w-full'}`}
-                    style={{
+                    className={`${animate ? 'animate-fade-in-up' : ''} ${viewMode === 'card' ? 'h-full' : 'w-full'}`}
+                    style={animate ? {
                       animationDelay: `${index * 0.03}s`,
                       animationFillMode: 'both',
-                    }}
+                    } : undefined}
                   >
                     <JobCard
                       {...job}
@@ -386,7 +394,7 @@ export default function JobsPage() {
               })}
             </div>
             {hasMore && (
-              <div className="mt-8 flex justify-center animate-fade-in">
+              <div className={`mt-8 flex justify-center ${animate ? 'animate-fade-in' : ''}`}>
                 <button
                   onClick={loadMore}
                   disabled={loading}

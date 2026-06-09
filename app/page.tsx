@@ -1,17 +1,31 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { hasPlayed, markPlayed } from '@/lib/animationState'
 
 export default function Home() {
+  const [animate, setAnimate] = useState(true)
+
+  useEffect(() => {
+    if (hasPlayed('home')) {
+      setAnimate(false)
+    } else {
+      markPlayed('home')
+    }
+  }, [])
+
   return (
     <div className="h-[calc(100vh-4rem)] overflow-hidden flex flex-col max-h-[calc(100vh-4rem)] bg-gradient-to-b from-transparent to-slate-50/30">
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden min-h-0">
         <div className="max-w-5xl mx-auto w-full text-center py-4">
-          <div className="mb-8 animate-fade-in-up inline-block">
+          <div className={`mb-8 ${animate ? 'animate-fade-in-up' : ''} inline-block`}>
             <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-slate-900 leading-tight tracking-tight">
               get a j*b.
             </h1>
           </div>
 
-          <div className="animate-fade-in-up-delay-1">
+          <div className={animate ? 'animate-fade-in-up-delay-1' : ''}>
             <p className="text-xl sm:text-2xl md:text-3xl text-slate-600 mb-3 font-medium tracking-tight">
               stop scrolling and start applying, chud.
             </p>
@@ -20,7 +34,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mb-10 animate-fade-in-up-delay-2">
+          <div className={`mb-10 ${animate ? 'animate-fade-in-up-delay-2' : ''}`}>
             <Link
               href="/jobs"
               className="inline-flex items-center gap-3 px-10 py-5 text-lg md:text-xl font-extrabold rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"

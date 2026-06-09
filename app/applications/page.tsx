@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
+import { hasPlayed, markPlayed } from '@/lib/animationState'
 
 interface Application {
   job_id: string
@@ -56,7 +57,16 @@ export default function ApplicationsPage() {
   const { user, isLoaded } = useUser()
   const [sortColumn, setSortColumn] = useState<SortColumn>('applied_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [animate, setAnimate] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    if (hasPlayed('applications')) {
+      setAnimate(false)
+    } else {
+      markPlayed('applications')
+    }
+  }, [])
 
   useEffect(() => {
     if (!user) return
@@ -265,7 +275,7 @@ export default function ApplicationsPage() {
         )}
 
         {!loading && applications.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
+          <div className={`flex flex-col items-center justify-center py-20 text-center ${animate ? 'animate-fade-in-up' : ''}`}>
             <div className="text-6xl mb-4 animate-pulse-glow">📋</div>
             <h3 className="text-xl font-bold text-slate-800 mb-2">
               No saved jobs yet
@@ -284,7 +294,7 @@ export default function ApplicationsPage() {
         )}
 
         {!loading && applications.length > 0 && (
-          <div className="overflow-x-auto rounded-none bg-white animate-fade-in-up">
+          <div className={`overflow-x-auto rounded-none bg-white ${animate ? 'animate-fade-in-up' : ''}`}>
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-100">
@@ -340,11 +350,11 @@ export default function ApplicationsPage() {
                 {sortedApplications.map((app, index) => (
                   <tr
                     key={app.job_id}
-                    className="border-b border-slate-100 hover:bg-slate-50/50 transition-all duration-200 animate-fade-in"
-                    style={{
+                    className={`border-b border-slate-100 hover:bg-slate-50/50 transition-all duration-200 ${animate ? 'animate-fade-in' : ''}`}
+                    style={animate ? {
                       animationDelay: `${index * 0.03}s`,
                       animationFillMode: 'both',
-                    }}
+                    } : undefined}
                   >
                     <td className="py-4 px-4 text-slate-900 font-bold">
                       {app.company}
