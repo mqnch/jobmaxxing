@@ -19,6 +19,7 @@ interface JobCardProps {
   onSaveChange?: (saved: boolean) => void
   onStatusChange?: (status: string) => void
   isAuthenticated?: boolean
+  viewMode?: 'card' | 'list'
 }
 
 const STATUS_OPTIONS = [
@@ -130,6 +131,7 @@ export default function JobCard({
   onSaveChange,
   onStatusChange,
   isAuthenticated = false,
+  viewMode = 'card',
 }: JobCardProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -194,6 +196,125 @@ export default function JobCard({
     } finally {
       setIsUpdatingStatus(false)
     }
+  }
+
+  if (viewMode === 'list') {
+    return (
+      <div className="w-full p-4 md:p-5 rounded-none bg-white hover:bg-slate-50/50 transition-all duration-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h3 className="text-base font-bold text-slate-800 tracking-tight truncate">
+                {company}
+              </h3>
+              {is_trending && (
+                <span className="text-base shrink-0" title="Trending job">🔥</span>
+              )}
+              {isNew && (
+                <span className="px-2 py-0.5 text-xs font-semibold text-white bg-red-600 rounded shrink-0">
+                  NEW
+                </span>
+              )}
+              {(date_posted || created_at) && (
+                <span className="text-xs text-slate-400 font-medium">
+                  • Posted {formatDatePosted(date_posted || created_at)}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm">
+              <p className="font-semibold text-slate-700">{role}</p>
+              <p className="text-slate-500 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="truncate">{formatLocation(location)}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
+            {isAuthenticated ? (
+              <div className="w-40 shrink-0">
+                <select
+                  value={status || 'not_applied'}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  disabled={isUpdatingStatus}
+                  className="w-full px-3 py-1.5 bg-slate-100/60 rounded-none text-xs text-slate-800 font-semibold focus:outline-none focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="text-right shrink-0">
+                <Link
+                  href="/login"
+                  className="text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors"
+                >
+                  Sign in to track
+                </Link>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 shrink-0">
+              {isAuthenticated && (
+                <button
+                  onClick={handleSaveToggle}
+                  disabled={isSaving}
+                  className={`p-1.5 rounded-full bg-slate-50 hover:bg-slate-100 transition-all duration-200 ${
+                    isSaved
+                      ? 'text-yellow-500 hover:text-yellow-600'
+                      : 'text-slate-400 hover:text-slate-600'
+                  } disabled:opacity-50`}
+                  title={isSaved ? 'Unsave job' : 'Save job'}
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill={isSaved ? 'currentColor' : 'none'}
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                    />
+                  </svg>
+                </button>
+              )}
+
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg text-white bg-slate-900 hover:bg-slate-800 transition-all duration-200"
+              >
+                <span>Apply</span>
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -39,6 +39,7 @@ export default function JobsPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [showTrendingOnly, setShowTrendingOnly] = useState(false)
   const [lastVisitTimestamp, setLastVisitTimestamp] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
   const limit = 50
 
   useEffect(() => {
@@ -48,7 +49,17 @@ export default function JobsPage() {
     }
     const now = new Date().toISOString()
     localStorage.setItem('lastJobsPageVisit', now)
+
+    const savedViewMode = localStorage.getItem('jobsViewMode')
+    if (savedViewMode === 'card' || savedViewMode === 'list') {
+      setViewMode(savedViewMode)
+    }
   }, [])
+
+  const changeViewMode = (mode: 'card' | 'list') => {
+    setViewMode(mode)
+    localStorage.setItem('jobsViewMode', mode)
+  }
 
   useEffect(() => {
     const fetchUserJobs = async () => {
@@ -260,6 +271,37 @@ export default function JobsPage() {
                 <option value="company-desc">Company (Z-A)</option>
               </select>
             </div>
+
+            <div className="flex items-center gap-1 bg-slate-100/60 p-1 rounded-lg sm:ml-auto">
+              <button
+                onClick={() => changeViewMode('card')}
+                className={`p-1.5 rounded-md transition-all duration-200 ${
+                  viewMode === 'card'
+                    ? 'bg-white shadow-sm text-slate-800'
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+                title="Card View"
+                aria-label="Card View"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => changeViewMode('list')}
+                className={`p-1.5 rounded-md transition-all duration-200 ${
+                  viewMode === 'list'
+                    ? 'bg-white shadow-sm text-slate-800'
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+                title="List View"
+                aria-label="List View"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -297,20 +339,21 @@ export default function JobsPage() {
                 {showTrendingOnly && ' (trending)'}
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={viewMode === 'card' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-3"}>
               {sortedAndFilteredJobs.map((job, index) => {
                 const userJob = userJobs[job.id]
                 return (
                   <div
                     key={job.id}
-                    className="animate-fade-in-up h-full"
+                    className={`animate-fade-in-up ${viewMode === 'card' ? 'h-full' : 'w-full'}`}
                     style={{
-                      animationDelay: `${index * 0.05}s`,
+                      animationDelay: `${index * 0.03}s`,
                       animationFillMode: 'both',
                     }}
                   >
                     <JobCard
                       {...job}
+                      viewMode={viewMode}
                       isAuthenticated={!!user}
                       isSaved={userJob?.saved || false}
                       status={userJob?.status}
