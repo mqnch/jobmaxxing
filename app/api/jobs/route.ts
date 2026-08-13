@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       .eq('active', active)
       .eq('season', season)
       .order('date_posted', { ascending: false, nullsFirst: false })
+      .order('id', { ascending: true })
       .range(offset, offset + limit - 1)
 
     if (trending) {
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
         .select('id, company, role, location, url, created_at')
         .eq('active', active)
         .order('created_at', { ascending: false, nullsFirst: false })
+        .order('id', { ascending: true })
         .range(offset, offset + limit - 1)
 
       if (q.trim()) {

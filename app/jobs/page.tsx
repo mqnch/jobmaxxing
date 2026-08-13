@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import JobCard from '@/components/JobCard'
 import PageHeader from '@/components/PageHeader'
@@ -43,13 +43,18 @@ export default function JobsPage() {
   const [userJobs, setUserJobs] = useState<Record<string, UserJob>>({})
   const [loadingUserJobs, setLoadingUserJobs] = useState(false)
   const [hasMore, setHasMore] = useState(true)
-  const [offset, setOffset] = useState(0)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null)
+  const loadingMoreLockRef = useRef(false)
+  const jobsFetchGenRef = useRef(0)
+  const offsetRef = useRef(0)
   const [sortBy, setSortBy] = useState<SortBy>('date')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [showTrendingOnly, setShowTrendingOnly] = useState(false)
   const [lastVisitTimestamp, setLastVisitTimestamp] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
   const [animate, setAnimate] = useState(true)
+  const [showScrollTop, setShowScrollTop] = useState(false)
   const limit = 50
 
   const [isSyncing, setIsSyncing] = useState(false)
@@ -225,6 +230,12 @@ export default function JobsPage() {
 
   useEffect(() => {
     const fetchJobs = async () => {
+      jobsFetchGenRef.current += 1
+      const fetchGen = jobsFetchGenRef.current
+      loadingMoreLockRef.current = false
+      offsetRef.current = 0
+      setIsLoadingMore(false)
+
       const isDefaultView = !debouncedQuery.trim() && !showTrendingOnly
       
       let useCache = false
@@ -260,7 +271,6 @@ export default function JobsPage() {
       if (!isSilentUpdate) {
         setLoading(true)
       }
-      setOffset(0)
       
       try {
         const params = new URLSearchParams()
@@ -280,6 +290,7 @@ export default function JobsPage() {
           throw new Error('Failed to fetch jobs')
         }
         const data = await response.json()
+        if (jobsFetchGenRef.current !== fetchGen) return
         setJobs(data || [])
         setHasMore((data || []).length === limit)
 
@@ -292,25 +303,30 @@ export default function JobsPage() {
         }
       } catch (error) {
         console.error('Error fetching jobs:', error)
-        if (!isSilentUpdate) {
+        if (jobsFetchGenRef.current === fetchGen && !isSilentUpdate) {
           setJobs([])
           setHasMore(false)
         }
       } finally {
-        setLoading(false)
-        setInitialFetchDone(true)
+        if (jobsFetchGenRef.current === fetchGen) {
+          setLoading(false)
+          setInitialFetchDone(true)
+        }
       }
     }
 
     fetchJobs()
   }, [debouncedQuery, showTrendingOnly, syncTrigger, season])
 
-  const loadMore = async () => {
-    if (loading || !hasMore) return
+  const loadMore = useCallback(async () => {
+    if (loading || isLoadingMore || !hasMore || loadingMoreLockRef.current) return
 
-    setLoading(true)
+    loadingMoreLockRef.current = true
+    const fetchGen = jobsFetchGenRef.current
+    const newOffset = offsetRef.current + limit
+    offsetRef.current = newOffset
+    setIsLoadingMore(true)
     try {
-      const newOffset = offset + limit
       const params = new URLSearchParams()
       if (debouncedQuery.trim()) {
         params.append('q', debouncedQuery.trim())
@@ -328,22 +344,54 @@ export default function JobsPage() {
         throw new Error('Failed to fetch jobs')
       }
       const data = await response.json()
+      if (jobsFetchGenRef.current !== fetchGen) return
       if (data && data.length > 0) {
-        setJobs((prev) => [...prev, ...data])
-        setOffset(newOffset)
+        setJobs((prev) => {
+          const seen = new Set(prev.map((job) => job.id))
+          const incoming = (data as Job[]).filter((job) => !seen.has(job.id))
+          return incoming.length > 0 ? [...prev, ...incoming] : prev
+        })
         setHasMore(data.length === limit)
       } else {
         setHasMore(false)
       }
     } catch (error) {
       console.error('Error loading more jobs:', error)
+      if (jobsFetchGenRef.current === fetchGen) {
+        offsetRef.current = newOffset - limit
+      }
     } finally {
-      setLoading(false)
+      if (jobsFetchGenRef.current === fetchGen) {
+        setIsLoadingMore(false)
+        loadingMoreLockRef.current = false
+      }
     }
-  }
+  }, [loading, isLoadingMore, hasMore, limit, debouncedQuery, showTrendingOnly, season])
+
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current
+    if (!sentinel || !hasMore || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore()
+        }
+      },
+      { rootMargin: '400px' }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [loadMore, hasMore, loading, jobs.length])
 
   const sortedAndFilteredJobs = useMemo(() => {
-    let filtered = [...jobs]
+    const seen = new Set<string>()
+    const filtered = jobs.filter((job) => {
+      if (seen.has(job.id)) return false
+      seen.add(job.id)
+      return true
+    })
 
     filtered.sort((a, b) => {
       if (sortBy === 'date') {
@@ -389,13 +437,39 @@ export default function JobsPage() {
     return jobDate > lastVisit
   }
 
+  useEffect(() => {
+    const main = document.querySelector('main')
+
+    const onScroll = () => {
+      const scrollTop = Math.max(
+        window.scrollY,
+        document.documentElement.scrollTop,
+        main?.scrollTop ?? 0
+      )
+      setShowScrollTop(scrollTop > 400)
+    }
+
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    main?.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      main?.removeEventListener('scroll', onScroll)
+    }
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <PageHeader
         title={season === 'summer' ? '☀️ Summer 2027 Internships' : '❄️ Winter 2027 Internships'}
         actions={
           <>
-            <span className="text-sm text-slate-500 font-medium">{stats.total} loaded</span>
+            <span className="text-sm text-slate-500 font-medium">{stats.total} listings</span>
             <span className="text-sm text-slate-500 font-medium">{stats.trending} trending</span>
             <button
               onClick={handleSyncLatest}
@@ -428,7 +502,7 @@ export default function JobsPage() {
             placeholder="Search by company, role, or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 px-4 pl-11 border-b border-slate-200 rounded-none text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-colors"
+            className="w-full h-12 px-4 pl-11 border-b border-slate-200 rounded-none text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0 focus:border-slate-200 transition-colors"
           />
           <svg
             className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
@@ -592,19 +666,37 @@ export default function JobsPage() {
               })}
             </div>
             {hasMore && (
-              <div className={`mt-8 flex justify-center ${animate ? 'animate-fade-in' : ''}`}>
-                <button
-                  onClick={loadMore}
-                  disabled={loading}
-                  className="px-6 py-3 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-800 disabled:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-none transition-colors duration-200"
-                >
-                  {loading ? 'Loading...' : 'Load More'}
-                </button>
+              <div
+                ref={loadMoreSentinelRef}
+                className="mt-8 flex justify-center py-6 min-h-[4rem]"
+                aria-hidden={!isLoadingMore}
+              >
+                {isLoadingMore && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-500 text-sm font-medium">Loading more jobs...</p>
+                  </div>
+                )}
               </div>
             )}
           </>
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={scrollToTop}
+        aria-label="Back to top"
+        className={`fixed right-5 z-40 flex items-center justify-center w-11 h-11 bg-slate-900 hover:bg-slate-800 text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] transition-all duration-200 ${
+          syncStatus ? 'bottom-52' : 'bottom-5'
+        } ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
+        }`}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+        </svg>
+      </button>
 
       {/* Toast Container */}
       {syncStatus && (

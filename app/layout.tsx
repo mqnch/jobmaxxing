@@ -22,9 +22,9 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen`}>
         <ClerkProvider>
           <SeasonProvider>
-            <div className="flex min-h-screen">
+            <div className="flex flex-col md:flex-row h-screen">
               <Sidebar />
-              <main className="flex-1 overflow-y-auto min-w-0">{children}</main>
+              <main className="flex-1 overflow-y-auto min-w-0 min-h-0">{children}</main>
             </div>
           </SeasonProvider>
         </ClerkProvider>
