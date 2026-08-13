@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { hasPlayed, markPlayed } from '@/lib/animationState'
+import PageHeader from '@/components/PageHeader'
 
 interface Application {
   job_id: string
@@ -256,15 +257,10 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">
-          My Applications
-        </h1>
-        <p className="text-slate-500 mb-8 font-medium">
-          Your tracked internship applications will appear here
-        </p>
+    <div className="min-h-screen flex flex-col">
+      <PageHeader title="My Applications" />
 
+      <div className="flex-1 px-6 py-6">
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-4">
@@ -286,7 +282,7 @@ export default function ApplicationsPage() {
             </p>
             <a
               href="/jobs"
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold rounded-lg text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold rounded-none text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"
             >
               Browse Jobs
             </a>
@@ -294,7 +290,7 @@ export default function ApplicationsPage() {
         )}
 
         {!loading && applications.length > 0 && (
-          <div className={`overflow-x-auto rounded-none bg-white ${animate ? 'animate-fade-in-up' : ''}`}>
+          <div className={`overflow-x-auto rounded-none border border-slate-200 bg-white ${animate ? 'animate-fade-in-up' : ''}`}>
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-100">
@@ -390,7 +386,7 @@ export default function ApplicationsPage() {
                           href={app.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-lg text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-bold rounded-none text-white bg-slate-900 hover:bg-slate-800 transition-colors duration-200"
                         >
                           <span>Apply</span>
                           <svg
@@ -409,7 +405,7 @@ export default function ApplicationsPage() {
                         </a>
                         <button
                           onClick={() => handleRemove(app.job_id)}
-                          className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                          className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-none transition-colors duration-200"
                           title="Remove"
                         >
                           <svg

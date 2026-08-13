@@ -2,8 +2,8 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { createJobHash } from '@/lib/utils'
 import { parseJobsFromMarkdown } from '@/lib/parse-jobs'
 
-const SUMMER_URL = 'https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/README.md'
-const OFF_SEASON_URL = 'https://raw.githubusercontent.com/SimplifyJobs/Summer2026-Internships/dev/README-Off-Season.md'
+const SUMMER_URL = 'https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/README.md'
+const OFF_SEASON_URL = 'https://raw.githubusercontent.com/SimplifyJobs/Summer2027-Internships/dev/README-Off-Season.md'
 
 export interface SyncStats {
   inserted: number
@@ -14,25 +14,34 @@ export interface SyncStats {
 }
 
 export async function runSync(): Promise<SyncStats> {
-  // 1. Fetch Summer 2026 internships
+  // 1. Fetch Summer internships
   const summerResponse = await fetch(SUMMER_URL)
   if (!summerResponse.ok) {
-    throw new Error(`Failed to fetch Summer 2026 markdown: ${summerResponse.statusText}`)
+    throw new Error(`Failed to fetch Summer markdown: ${summerResponse.statusText}`)
   }
   const summerMarkdown = await summerResponse.text()
 
-  // 2. Fetch Off-Season internships
+  // 2. Fetch Off-Season internships (Fall/Winter/Spring) — we only keep Winter postings from this file
   const offSeasonResponse = await fetch(OFF_SEASON_URL)
   if (!offSeasonResponse.ok) {
     throw new Error(`Failed to fetch Off-Season markdown: ${offSeasonResponse.statusText}`)
   }
   const offSeasonMarkdown = await offSeasonResponse.text()
 
-  // 3. Parse jobs from both markdowns
-  const parsedSummerJobs = parseJobsFromMarkdown(summerMarkdown)
-  const parsedOffSeasonJobs = parseJobsFromMarkdown(offSeasonMarkdown)
+  // 3. Parse jobs from both markdowns and tag each with a season
+  const summerJobs = parseJobsFromMarkdown(summerMarkdown).map((job) => ({
+    ...job,
+    season: 'summer' as const,
+  }))
 
-  const parsedJobs = [...parsedSummerJobs, ...parsedOffSeasonJobs]
+  const winterJobs = parseJobsFromMarkdown(offSeasonMarkdown)
+    .filter((job) => job.terms.toLowerCase().includes('winter'))
+    .map((job) => ({
+      ...job,
+      season: 'winter' as const,
+    }))
+
+  const parsedJobs = [...summerJobs, ...winterJobs]
   const totalParsed = parsedJobs.length
 
   const supabase = createServiceClient()
@@ -68,6 +77,10 @@ export async function runSync(): Promise<SyncStats> {
       description: job.description,
       is_trending: job.is_trending || false,
       date_posted: job.date_posted || null,
+      season: job.season,
+      no_sponsorship: job.no_sponsorship || false,
+      requires_us_citizenship: job.requires_us_citizenship || false,
+      requires_advanced_degree: job.requires_advanced_degree || false,
       active: true,
       last_seen_at: now,
     })
@@ -101,16 +114,20 @@ export async function runSync(): Promise<SyncStats> {
           upsertError.message?.includes('column') ||
           upsertError.code === 'PGRST116' ||
           upsertError.message?.includes('date_posted') ||
-          upsertError.message?.includes('is_trending')
+          upsertError.message?.includes('is_trending') ||
+          upsertError.message?.includes('season') ||
+          upsertError.message?.includes('sponsorship') ||
+          upsertError.message?.includes('citizenship') ||
+          upsertError.message?.includes('degree')
         ) {
           console.error(
-            'Database schema error detected. Missing columns: date_posted and/or is_trending'
+            'Database schema error detected. Missing columns: date_posted, is_trending, season, no_sponsorship, requires_us_citizenship, and/or requires_advanced_degree'
           )
           console.error(
-            'Please run the migration: supabase/migrations/add_job_columns.sql'
+            'Please run the migrations: supabase/migrations/add_job_columns.sql, supabase/migrations/add_job_season.sql, and supabase/migrations/add_job_flags.sql'
           )
           throw new Error(
-            `Database schema error: ${upsertError.message}. Please run migration file: supabase/migrations/add_job_columns.sql`
+            `Database schema error: ${upsertError.message}. Please run migration files: supabase/migrations/add_job_columns.sql, supabase/migrations/add_job_season.sql, and supabase/migrations/add_job_flags.sql`
           )
         }
 

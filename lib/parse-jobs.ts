@@ -6,6 +6,10 @@ export interface ParsedJob {
   description: string
   is_trending: boolean
   date_posted: string | null
+  terms: string
+  no_sponsorship: boolean
+  requires_us_citizenship: boolean
+  requires_advanced_degree: boolean
 }
 
 function stripHtml(html: string): string {
@@ -171,7 +175,14 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
         }
       }
 
+      const no_sponsorship = roleHtml.includes('🛂')
+      const requires_us_citizenship = roleHtml.includes('🇺🇸')
+      const requires_advanced_degree = roleHtml.includes('🎓')
+
       let role = stripHtml(roleHtml)
+        .replace(/🛂|🇺🇸|🎓/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
       const terms = termsHtml ? stripHtml(termsHtml).trim() : ''
       if (terms) {
         role = `${role} (${terms})`
@@ -213,6 +224,10 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
         description,
         is_trending,
         date_posted,
+        terms,
+        no_sponsorship,
+        requires_us_citizenship,
+        requires_advanced_degree,
       })
     }
   }

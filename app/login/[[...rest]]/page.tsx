@@ -2,7 +2,7 @@ import { SignIn } from '@clerk/nextjs'
 
 export default function LoginPage() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-[10vh] p-4">
+    <div className="min-h-[calc(100vh-4rem)] md:min-h-screen flex items-start justify-center pt-[10vh] p-4">
       <SignIn
         path="/login"
         fallbackRedirectUrl="/jobs"
@@ -20,7 +20,7 @@ export default function LoginPage() {
             card: 'border-none rounded-none bg-white shadow-none',
             headerTitle: 'text-slate-900 font-bold',
             headerSubtitle: 'text-slate-500',
-            socialButtonsBlockButton: 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg border-none shadow-none',
+            socialButtonsBlockButton: 'bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-none border-none shadow-none',
             socialButtonsBlockButton__microsoft: 'hidden',
             socialButtonsBlockButton__oauth_microsoft: 'hidden',
             socialButtonsBlockButtonText: 'text-slate-700 font-medium',
@@ -30,7 +30,7 @@ export default function LoginPage() {
             formFieldInput: 'text-slate-800 bg-slate-100 rounded-none focus:bg-white border-none focus:ring-0 focus:outline-none',
             footerActionText: 'text-slate-500',
             footerActionLink: 'text-slate-900 hover:text-slate-800 font-semibold underline',
-            formButtonPrimary: 'bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg border-none',
+            formButtonPrimary: 'bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-none border-none',
           }
         }}
       />

@@ -11,13 +11,16 @@ export async function GET(request: NextRequest) {
     const active = activeParam === null ? true : activeParam === 'true'
     const trendingParam = searchParams.get('trending')
     const trending = trendingParam === 'true'
+    const seasonParam = searchParams.get('season')
+    const season = seasonParam === 'winter' ? 'winter' : 'summer'
     const limit = parseInt(searchParams.get('limit') || '50', 10)
     const offset = parseInt(searchParams.get('offset') || '0', 10)
 
     let query = supabase
       .from('jobs')
-      .select('id, company, role, location, url, date_posted, created_at, is_trending')
+      .select('id, company, role, location, url, date_posted, created_at, is_trending, season, no_sponsorship, requires_us_citizenship, requires_advanced_degree')
       .eq('active', active)
+      .eq('season', season)
       .order('date_posted', { ascending: false, nullsFirst: false })
       .range(offset, offset + limit - 1)
 
@@ -58,6 +61,9 @@ export async function GET(request: NextRequest) {
           ...job,
           date_posted: job.created_at || null,
           is_trending: false,
+          no_sponsorship: false,
+          requires_us_citizenship: false,
+          requires_advanced_degree: false,
         })) as any
         
         if (trending && data) {

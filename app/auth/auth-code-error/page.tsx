@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function AuthCodeError() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
+    <div className="min-h-[calc(100vh-4rem)] md:min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8 p-8 bg-white border border-slate-300 rounded-none shadow-none">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-slate-900">
@@ -15,7 +15,7 @@ export default function AuthCodeError() {
         <div>
           <Link
             href="/login"
-            className="w-full flex justify-center py-2.5 px-4 rounded-lg text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all"
+            className="w-full flex justify-center py-2.5 px-4 rounded-none text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 transition-all"
           >
             Go to Login
           </Link>

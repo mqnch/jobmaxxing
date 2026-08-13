@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import Navbar from '@/components/Navbar'
+import Sidebar from '@/components/Sidebar'
 import { ClerkProvider } from '@clerk/nextjs'
+import { SeasonProvider } from '@/lib/season-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,10 +19,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
+      <body className={`${inter.className} min-h-screen`}>
         <ClerkProvider>
-          <Navbar />
-          <main className="flex-1 overflow-y-auto">{children}</main>
+          <SeasonProvider>
+            <div className="flex min-h-screen">
+              <Sidebar />
+              <main className="flex-1 overflow-y-auto min-w-0">{children}</main>
+            </div>
+          </SeasonProvider>
         </ClerkProvider>
       </body>
     </html>
