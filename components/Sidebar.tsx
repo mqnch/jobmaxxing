@@ -33,9 +33,16 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
     },
     {
       key: 'apps',
-      label: 'Apps',
+      label: 'Applications',
       icon: '📋',
       isActive: pathname === '/applications',
+      onClick: () => {},
+    },
+    {
+      key: 'sankey',
+      label: 'Sankey Diagram',
+      icon: '📊',
+      isActive: pathname === '/sankey' || pathname === '/pipeline',
       onClick: () => {},
     },
   ]
@@ -45,7 +52,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
       {items.map((item) => (
         <Link
           key={item.key}
-          href={item.key === 'apps' ? '/applications' : '/jobs'}
+          href={item.key === 'apps' ? '/applications' : item.key === 'sankey' ? '/sankey' : '/jobs'}
           onClick={() => {
             item.onClick()
             onNavigate?.()

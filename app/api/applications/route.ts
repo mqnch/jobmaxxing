@@ -1,5 +1,6 @@
 import { getUser } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
+import { termFromSeason } from '@/lib/terms'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
@@ -21,12 +22,15 @@ export async function GET() {
         notes,
         applied_at,
         last_heard_at,
+        interview_rounds,
+        term,
         jobs (
           id,
           company,
           role,
           location,
-          url
+          url,
+          season
         )
       `
       )
@@ -74,6 +78,8 @@ export async function GET() {
           notes: item.notes || null,
           applied_at: item.applied_at || null,
           last_heard_at: item.last_heard_at || null,
+          interview_rounds: item.interview_rounds ?? 0,
+          term: item.term || termFromSeason(job.season),
         }
       })
       .filter((app: any) => app !== null)
