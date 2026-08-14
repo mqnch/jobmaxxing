@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Sidebar from '@/components/Sidebar'
+import ScrollToTop from '@/components/ScrollToTop'
 import { ClerkProvider } from '@clerk/nextjs'
 import { SeasonProvider } from '@/lib/season-context'
 
@@ -24,7 +25,10 @@ export default function RootLayout({
           <SeasonProvider>
             <div className="flex flex-col md:flex-row h-screen">
               <Sidebar />
-              <main className="flex-1 overflow-y-auto min-w-0 min-h-0">{children}</main>
+              <main id="page-scroll" className="flex-1 overflow-y-auto min-w-0 min-h-0">
+                {children}
+              </main>
+              <ScrollToTop />
             </div>
           </SeasonProvider>
         </ClerkProvider>

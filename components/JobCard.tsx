@@ -120,6 +120,22 @@ const formatLocation = (location: string): string => {
   return fixedLocation
 }
 
+const MAX_LOCATION_CHARS = 72
+
+function displayLocation(location: string): { text: string; full: string } {
+  const full = formatLocation(location)
+  const parts = full.split(/\s+[—–]\s+/).map((part) => part.trim()).filter(Boolean)
+
+  let text = full
+  if (parts.length > 2) {
+    text = `${parts.slice(0, 2).join(' — ')}...`
+  } else if (full.length > MAX_LOCATION_CHARS) {
+    text = `${full.slice(0, MAX_LOCATION_CHARS - 3).trimEnd()}...`
+  }
+
+  return { text, full }
+}
+
 function JobFlagBadges({
   is_trending,
   no_sponsorship,
@@ -182,6 +198,7 @@ export default function JobCard({
 }: JobCardProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const { text: locationText, full: locationFull } = displayLocation(location)
 
   const handleSaveToggle = async () => {
     if (!isAuthenticated || !onSaveChange) return
@@ -273,15 +290,15 @@ export default function JobCard({
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm">
-                <p className="font-semibold text-slate-700">{role}</p>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm min-w-0">
+                <p className="font-semibold text-slate-700 truncate sm:max-w-[46%]">{role}</p>
                 <span className="hidden sm:inline text-slate-300">•</span>
-                <p className="text-slate-500 flex items-center gap-1">
+                <p className="text-slate-500 flex items-center gap-1 min-w-0 flex-1">
                   <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="truncate">{formatLocation(location)}</span>
+                  <span className="truncate" title={locationFull}>{locationText}</span>
                 </p>
                 {(date_posted || created_at) && (
                   <>
@@ -435,12 +452,12 @@ export default function JobCard({
             )}
           </div>
           <p className="text-base font-semibold text-slate-700 mb-2 leading-snug">{role}</p>
-          <p className="text-sm text-slate-500 mb-4 flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <p className="text-sm text-slate-500 mb-4 flex items-start gap-1.5 min-w-0">
+            <svg className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span>{formatLocation(location)}</span>
+            <span className="truncate" title={locationFull}>{locationText}</span>
           </p>
 
           {isAuthenticated ? (

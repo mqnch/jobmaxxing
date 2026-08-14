@@ -28,6 +28,15 @@ export async function GET(request: NextRequest) {
     if (trending) {
       query = query.eq('is_trending', true)
     }
+    if (searchParams.get('advanced_degree') === 'true') {
+      query = query.eq('requires_advanced_degree', true)
+    }
+    if (searchParams.get('no_sponsorship') === 'true') {
+      query = query.eq('no_sponsorship', true)
+    }
+    if (searchParams.get('citizenship') === 'true') {
+      query = query.eq('requires_us_citizenship', true)
+    }
 
     if (q.trim()) {
       const searchTerm = q.trim()

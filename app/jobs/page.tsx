@@ -51,10 +51,12 @@ export default function JobsPage() {
   const [sortBy, setSortBy] = useState<SortBy>('date')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [showTrendingOnly, setShowTrendingOnly] = useState(false)
+  const [showPostgradOnly, setShowPostgradOnly] = useState(false)
+  const [showNoSponsorshipOnly, setShowNoSponsorshipOnly] = useState(false)
+  const [showCitizenshipOnly, setShowCitizenshipOnly] = useState(false)
   const [lastVisitTimestamp, setLastVisitTimestamp] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
   const [animate, setAnimate] = useState(true)
-  const [showScrollTop, setShowScrollTop] = useState(false)
   const limit = 50
 
   const [isSyncing, setIsSyncing] = useState(false)
@@ -236,7 +238,12 @@ export default function JobsPage() {
       offsetRef.current = 0
       setIsLoadingMore(false)
 
-      const isDefaultView = !debouncedQuery.trim() && !showTrendingOnly
+      const isDefaultView =
+        !debouncedQuery.trim() &&
+        !showTrendingOnly &&
+        !showPostgradOnly &&
+        !showNoSponsorshipOnly &&
+        !showCitizenshipOnly
       
       let useCache = false
       if (isDefaultView && !initialFetchDone && syncTrigger === 0) {
@@ -280,6 +287,15 @@ export default function JobsPage() {
         if (showTrendingOnly) {
           params.append('trending', 'true')
         }
+        if (showPostgradOnly) {
+          params.append('advanced_degree', 'true')
+        }
+        if (showNoSponsorshipOnly) {
+          params.append('no_sponsorship', 'true')
+        }
+        if (showCitizenshipOnly) {
+          params.append('citizenship', 'true')
+        }
         params.append('season', season)
         params.append('active', 'true')
         params.append('limit', limit.toString())
@@ -316,7 +332,7 @@ export default function JobsPage() {
     }
 
     fetchJobs()
-  }, [debouncedQuery, showTrendingOnly, syncTrigger, season])
+  }, [debouncedQuery, showTrendingOnly, showPostgradOnly, showNoSponsorshipOnly, showCitizenshipOnly, syncTrigger, season])
 
   const loadMore = useCallback(async () => {
     if (loading || isLoadingMore || !hasMore || loadingMoreLockRef.current) return
@@ -333,6 +349,15 @@ export default function JobsPage() {
       }
       if (showTrendingOnly) {
         params.append('trending', 'true')
+      }
+      if (showPostgradOnly) {
+        params.append('advanced_degree', 'true')
+      }
+      if (showNoSponsorshipOnly) {
+        params.append('no_sponsorship', 'true')
+      }
+      if (showCitizenshipOnly) {
+        params.append('citizenship', 'true')
       }
       params.append('season', season)
       params.append('active', 'true')
@@ -366,7 +391,7 @@ export default function JobsPage() {
         loadingMoreLockRef.current = false
       }
     }
-  }, [loading, isLoadingMore, hasMore, limit, debouncedQuery, showTrendingOnly, season])
+  }, [loading, isLoadingMore, hasMore, limit, debouncedQuery, showTrendingOnly, showPostgradOnly, showNoSponsorshipOnly, showCitizenshipOnly, season])
 
   useEffect(() => {
     const sentinel = loadMoreSentinelRef.current
@@ -437,32 +462,6 @@ export default function JobsPage() {
     return jobDate > lastVisit
   }
 
-  useEffect(() => {
-    const main = document.querySelector('main')
-
-    const onScroll = () => {
-      const scrollTop = Math.max(
-        window.scrollY,
-        document.documentElement.scrollTop,
-        main?.scrollTop ?? 0
-      )
-      setShowScrollTop(scrollTop > 400)
-    }
-
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    main?.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      main?.removeEventListener('scroll', onScroll)
-    }
-  }, [])
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
   return (
     <div className="min-h-screen flex flex-col">
       <PageHeader
@@ -502,7 +501,7 @@ export default function JobsPage() {
             placeholder="Search by company, role, or location..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-12 px-4 pl-11 border-b border-slate-200 rounded-none text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0 focus:border-slate-200 transition-colors"
+            className="w-full h-12 px-4 pl-11 border-b border-slate-200 rounded-none text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-colors"
           />
           <svg
             className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
@@ -532,8 +531,38 @@ export default function JobsPage() {
           >
             🔥 Trending
           </button>
+          <button
+            onClick={() => setShowPostgradOnly(!showPostgradOnly)}
+            className={`px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+              showPostgradOnly
+                ? 'bg-violet-700 border-violet-700 text-white hover:bg-violet-800'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            🎓 Postgrad
+          </button>
+          <button
+            onClick={() => setShowNoSponsorshipOnly(!showNoSponsorshipOnly)}
+            className={`px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+              showNoSponsorshipOnly
+                ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            🛂 No Sponsorship
+          </button>
+          <button
+            onClick={() => setShowCitizenshipOnly(!showCitizenshipOnly)}
+            className={`px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+              showCitizenshipOnly
+                ? 'bg-blue-700 border-blue-700 text-white hover:bg-blue-800'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            🇺🇸 US Citizenship
+          </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             <span className="text-sm text-slate-400 font-medium">Sort by:</span>
             <select
               value={`${sortBy}-${sortOrder}`}
@@ -551,7 +580,7 @@ export default function JobsPage() {
             </select>
           </div>
 
-          <div className="flex border border-slate-200 ml-auto">
+          <div className="flex border border-slate-200">
             <button
               onClick={() => changeViewMode('card')}
               className={`p-2 border-r border-slate-200 transition-colors duration-200 ${
@@ -616,7 +645,10 @@ export default function JobsPage() {
               <p className="text-sm text-slate-400 font-medium">
                 Found {sortedAndFilteredJobs.length} {sortedAndFilteredJobs.length === 1 ? 'job' : 'jobs'}
                 {debouncedQuery.trim() && ` matching "${debouncedQuery}"`}
-                {showTrendingOnly && ' (trending)'}
+                {showTrendingOnly && ' · trending'}
+                {showPostgradOnly && ' · postgrad'}
+                {showNoSponsorshipOnly && ' · no sponsorship'}
+                {showCitizenshipOnly && ' · US citizenship'}
               </p>
             </div>
             <div className={viewMode === 'card' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-3"}>
@@ -682,21 +714,6 @@ export default function JobsPage() {
           </>
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={scrollToTop}
-        aria-label="Back to top"
-        className={`fixed right-5 z-40 flex items-center justify-center w-11 h-11 bg-slate-900 hover:bg-slate-800 text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] transition-all duration-200 ${
-          syncStatus ? 'bottom-52' : 'bottom-5'
-        } ${
-          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-        }`}
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-        </svg>
-      </button>
 
       {/* Toast Container */}
       {syncStatus && (
