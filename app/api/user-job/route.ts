@@ -40,17 +40,26 @@ export async function POST(request: NextRequest) {
       job_id,
     }
 
+    const currentStatus = existingRecord?.status || 'not_applied'
+
     if (saved !== undefined) upsertData.saved = saved
     if (status !== undefined) {
       upsertData.status = status
+    } else if (saved === true && currentStatus === 'not_applied') {
+      upsertData.status = 'applied'
+    }
 
-      if (status === 'applied' && !existingRecord?.applied_at) {
-        upsertData.applied_at = new Date().toISOString()
-      }
+    const nextStatus = upsertData.status ?? currentStatus
+    if (currentStatus === 'not_applied' && nextStatus !== 'not_applied') {
+      upsertData.saved = true
+    }
 
-      if (['interview', 'offer', 'rejected'].includes(status)) {
-        upsertData.last_heard_at = new Date().toISOString()
-      }
+    if (nextStatus === 'applied' && !existingRecord?.applied_at) {
+      upsertData.applied_at = new Date().toISOString()
+    }
+
+    if (status !== undefined && ['interview', 'offer', 'rejected'].includes(status)) {
+      upsertData.last_heard_at = new Date().toISOString()
     }
 
     const { data, error } = await supabase
@@ -116,7 +125,18 @@ export async function PATCH(request: NextRequest) {
     if (saved !== undefined) updateData.saved = saved
     if (notes !== undefined) updateData.notes = notes
 
-    if (status === 'applied' && !currentRecord?.applied_at) {
+    const currentStatus = currentRecord?.status || 'not_applied'
+    const nextStatus = status ?? currentStatus
+
+    if (saved === true && status === undefined && currentStatus === 'not_applied') {
+      updateData.status = 'applied'
+    }
+
+    if (currentStatus === 'not_applied' && nextStatus !== 'not_applied') {
+      updateData.saved = true
+    }
+
+    if ((updateData.status ?? nextStatus) === 'applied' && !currentRecord?.applied_at) {
       updateData.applied_at = new Date().toISOString()
     }
 

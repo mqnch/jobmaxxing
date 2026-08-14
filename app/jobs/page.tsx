@@ -6,6 +6,7 @@ import JobCard from '@/components/JobCard'
 import PageHeader from '@/components/PageHeader'
 import { hasPlayed, markPlayed } from '@/lib/animationState'
 import { useSeason } from '@/lib/season-context'
+import { JOBS_SYNCED_EVENT, syncLatestJobs, type JobsSyncDetail } from '@/lib/job-sync'
 import { formatDistanceToNowStrict } from 'date-fns'
 
 interface Job {
@@ -32,6 +33,25 @@ interface UserJob {
 
 type SortBy = 'date' | 'company'
 type SortOrder = 'asc' | 'desc'
+type ViewMode = 'card' | 'list'
+
+const VIEW_MODE_DESKTOP_KEY = 'jobsViewMode'
+const VIEW_MODE_MOBILE_KEY = 'jobsViewModeMobile'
+
+function isMobileViewport() {
+  return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+}
+
+function getViewModeStorageKey() {
+  return isMobileViewport() ? VIEW_MODE_MOBILE_KEY : VIEW_MODE_DESKTOP_KEY
+}
+
+function getDefaultViewMode(): ViewMode {
+  if (typeof window === 'undefined') return 'card'
+  const saved = localStorage.getItem(getViewModeStorageKey())
+  if (saved === 'card' || saved === 'list') return saved
+  return isMobileViewport() ? 'list' : 'card'
+}
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([])
@@ -55,7 +75,7 @@ export default function JobsPage() {
   const [showNoSponsorshipOnly, setShowNoSponsorshipOnly] = useState(false)
   const [showCitizenshipOnly, setShowCitizenshipOnly] = useState(false)
   const [lastVisitTimestamp, setLastVisitTimestamp] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
+  const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [animate, setAnimate] = useState(true)
   const limit = 50
 
@@ -97,6 +117,23 @@ export default function JobsPage() {
   const [cacheTimestamp, setCacheTimestamp] = useState<string | null>(null)
 
   useEffect(() => {
+    const onSynced = (event: Event) => {
+      const detail = (event as CustomEvent<JobsSyncDetail>).detail
+      if (!detail || detail.type !== 'success') return
+      setCacheTimestamp(null)
+      setSyncTrigger((prev) => prev + 1)
+      showToast({
+        type: 'success',
+        message: detail.message,
+        stats: detail.stats,
+      })
+    }
+
+    window.addEventListener(JOBS_SYNCED_EVENT, onSynced)
+    return () => window.removeEventListener(JOBS_SYNCED_EVENT, onSynced)
+  }, [])
+
+  useEffect(() => {
     const stored = localStorage.getItem('lastJobsPageVisit')
     if (stored) {
       setLastVisitTimestamp(stored)
@@ -104,10 +141,7 @@ export default function JobsPage() {
     const now = new Date().toISOString()
     localStorage.setItem('lastJobsPageVisit', now)
 
-    const savedViewMode = localStorage.getItem('jobsViewMode')
-    if (savedViewMode === 'card' || savedViewMode === 'list') {
-      setViewMode(savedViewMode)
-    }
+    setViewMode(getDefaultViewMode())
 
     if (hasPlayed('jobs')) {
       setAnimate(false)
@@ -151,33 +185,7 @@ export default function JobsPage() {
 
     setIsSyncing(true)
     try {
-      const response = await fetch('/api/jobs/sync', {
-        method: 'POST',
-      })
-      
-      const result = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(result.message || result.error || 'Failed to sync')
-      }
-
-      const stats = result.stats
-      showToast({
-        type: 'success',
-        message: 'Successfully synchronized the latest jobs from GitHub.',
-        stats: {
-          inserted: stats.inserted || 0,
-          updated: stats.updated || 0,
-          deactivated: stats.deactivated || 0,
-        },
-      })
-
-      localStorage.removeItem('jobs_cache_data_summer')
-      localStorage.removeItem('jobs_cache_timestamp_summer')
-      localStorage.removeItem('jobs_cache_data_winter')
-      localStorage.removeItem('jobs_cache_timestamp_winter')
-      setCacheTimestamp(null)
-      setSyncTrigger(prev => prev + 1)
+      await syncLatestJobs()
     } catch (error) {
       console.error('Sync error:', error)
       showToast({
@@ -189,9 +197,9 @@ export default function JobsPage() {
     }
   }
 
-  const changeViewMode = (mode: 'card' | 'list') => {
+  const changeViewMode = (mode: ViewMode) => {
     setViewMode(mode)
-    localStorage.setItem('jobsViewMode', mode)
+    localStorage.setItem(getViewModeStorageKey(), mode)
   }
 
   useEffect(() => {
@@ -519,96 +527,106 @@ export default function JobsPage() {
         </div>
       </div>
 
-      <div className={`px-4 pt-4 pb-2 flex items-center ${animate ? 'animate-fade-in-up' : ''}`}>
+      <div className={`px-6 pt-4 pb-2 flex items-center ${animate ? 'animate-fade-in-up' : ''}`}>
         <div className={`w-full flex flex-wrap items-center gap-4 ${animate ? 'animate-fade-in-up' : ''}`} style={animate ? { animationDelay: '0.1s', animationFillMode: 'both' } : undefined}>
           <button
             onClick={() => setShowTrendingOnly(!showTrendingOnly)}
-            className={`px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+            title="Trending"
+            aria-label="Trending"
+            className={`px-3 md:px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
               showTrendingOnly
                 ? 'bg-orange-600 border-orange-600 text-white hover:bg-orange-700'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            🔥 Trending
+            🔥<span className="hidden md:inline"> Trending</span>
           </button>
           <button
             onClick={() => setShowPostgradOnly(!showPostgradOnly)}
-            className={`px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+            title="Postgrad"
+            aria-label="Postgrad"
+            className={`px-3 md:px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
               showPostgradOnly
                 ? 'bg-violet-700 border-violet-700 text-white hover:bg-violet-800'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            🎓 Postgrad
+            🎓<span className="hidden md:inline"> Postgrad</span>
           </button>
           <button
             onClick={() => setShowNoSponsorshipOnly(!showNoSponsorshipOnly)}
-            className={`px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+            title="No Sponsorship"
+            aria-label="No Sponsorship"
+            className={`px-3 md:px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
               showNoSponsorshipOnly
                 ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            🛂 No Sponsorship
+            🛂<span className="hidden md:inline"> No Sponsorship</span>
           </button>
           <button
             onClick={() => setShowCitizenshipOnly(!showCitizenshipOnly)}
-            className={`px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+            title="US Citizenship"
+            aria-label="US Citizenship"
+            className={`px-3 md:px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
               showCitizenshipOnly
                 ? 'bg-blue-700 border-blue-700 text-white hover:bg-blue-800'
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            🇺🇸 US Citizenship
+            🇺🇸<span className="hidden md:inline"> US Citizenship</span>
           </button>
 
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-sm text-slate-400 font-medium">Sort by:</span>
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [by, order] = e.target.value.split('-') as [SortBy, SortOrder]
-                setSortBy(by)
-                setSortOrder(order)
-              }}
-              className="px-3 py-2 border border-slate-200 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:border-slate-400 transition-colors"
-            >
-              <option value="date-desc">Date Posted (Newest)</option>
-              <option value="date-asc">Date Posted (Oldest)</option>
-              <option value="company-asc">Company (A-Z)</option>
-              <option value="company-desc">Company (Z-A)</option>
-            </select>
-          </div>
+          <div className="flex items-center justify-between gap-4 w-full md:w-auto md:ml-auto md:justify-start">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-400 font-medium">Sort by:</span>
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [by, order] = e.target.value.split('-') as [SortBy, SortOrder]
+                  setSortBy(by)
+                  setSortOrder(order)
+                }}
+                className="px-3 py-2 border border-slate-200 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:border-slate-400 transition-colors"
+              >
+                <option value="date-desc">Date Posted (Newest)</option>
+                <option value="date-asc">Date Posted (Oldest)</option>
+                <option value="company-asc">Company (A-Z)</option>
+                <option value="company-desc">Company (Z-A)</option>
+              </select>
+            </div>
 
-          <div className="flex border border-slate-200">
-            <button
-              onClick={() => changeViewMode('card')}
-              className={`p-2 border-r border-slate-200 transition-colors duration-200 ${
-                viewMode === 'card'
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-              }`}
-              title="Card View"
-              aria-label="Card View"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => changeViewMode('list')}
-              className={`p-2 transition-colors duration-200 ${
-                viewMode === 'list'
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
-              }`}
-              title="List View"
-              aria-label="List View"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            <div className="flex border border-slate-200">
+              <button
+                onClick={() => changeViewMode('card')}
+                className={`p-2 border-r border-slate-200 transition-colors duration-200 ${
+                  viewMode === 'card'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+                title="Card View"
+                aria-label="Card View"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => changeViewMode('list')}
+                className={`p-2 transition-colors duration-200 ${
+                  viewMode === 'list'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'
+                }`}
+                title="List View"
+                aria-label="List View"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -641,7 +659,7 @@ export default function JobsPage() {
 
         {!loading && sortedAndFilteredJobs.length > 0 && (
           <>
-            <div className={`mb-4 ${animate ? 'animate-fade-in' : ''}`}>
+            <div className={`hidden md:block mb-4 ${animate ? 'animate-fade-in' : ''}`}>
               <p className="text-sm text-slate-400 font-medium">
                 Found {sortedAndFilteredJobs.length} {sortedAndFilteredJobs.length === 1 ? 'job' : 'jobs'}
                 {debouncedQuery.trim() && ` matching "${debouncedQuery}"`}
@@ -671,15 +689,18 @@ export default function JobsPage() {
                       status={userJob?.status}
                       isNew={isJobNew(job)}
                       onSaveChange={(saved) => {
-                        setUserJobs((prev) => ({
-                          ...prev,
-                          [job.id]: {
-                            ...prev[job.id],
-                            job_id: job.id,
-                            saved,
-                            status: prev[job.id]?.status || 'not_applied',
-                          },
-                        }))
+                        setUserJobs((prev) => {
+                          const currentStatus = prev[job.id]?.status || 'not_applied'
+                          return {
+                            ...prev,
+                            [job.id]: {
+                              ...prev[job.id],
+                              job_id: job.id,
+                              saved,
+                              status: saved && currentStatus === 'not_applied' ? 'applied' : currentStatus,
+                            },
+                          }
+                        })
                       }}
                       onStatusChange={(status) => {
                         setUserJobs((prev) => ({
@@ -687,7 +708,11 @@ export default function JobsPage() {
                           [job.id]: {
                             ...prev[job.id],
                             job_id: job.id,
-                            saved: prev[job.id]?.saved || false,
+                            saved:
+                              (prev[job.id]?.status || 'not_applied') === 'not_applied' &&
+                              status !== 'not_applied'
+                                ? true
+                                : prev[job.id]?.saved || false,
                             status,
                           },
                         }))

@@ -55,6 +55,7 @@ function formatDate(dateString: string | null | undefined): string {
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
   const { user, isLoaded } = useUser()
   const [sortColumn, setSortColumn] = useState<SortColumn>('applied_at')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
@@ -97,7 +98,15 @@ export default function ApplicationsPage() {
   }, [user, router])
 
   const sortedApplications = useMemo(() => {
-    const sorted = [...applications]
+    const query = searchQuery.trim().toLowerCase()
+    const sorted = query
+      ? applications.filter(
+          (app) =>
+            app.company.toLowerCase().includes(query) ||
+            app.role.toLowerCase().includes(query) ||
+            app.location.toLowerCase().includes(query)
+        )
+      : [...applications]
     sorted.sort((a, b) => {
       let aValue: any
       let bValue: any
@@ -132,7 +141,7 @@ export default function ApplicationsPage() {
       return 0
     })
     return sorted
-  }, [applications, sortColumn, sortDirection])
+  }, [applications, sortColumn, sortDirection, searchQuery])
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -258,7 +267,32 @@ export default function ApplicationsPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <PageHeader title="My Applications" />
+      <PageHeader title="📋 My Applications" />
+
+      <div className={animate ? 'animate-fade-in-up' : ''}>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search by company, role, or location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-12 px-4 pl-11 border-b border-slate-200 rounded-none text-slate-800 placeholder-slate-400 focus:outline-none focus:border-slate-400 transition-colors"
+          />
+          <svg
+            className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+      </div>
 
       <div className="flex-1 px-6 py-6">
         {loading && (
@@ -289,7 +323,19 @@ export default function ApplicationsPage() {
           </div>
         )}
 
-        {!loading && applications.length > 0 && (
+        {!loading && applications.length > 0 && sortedApplications.length === 0 && (
+          <div className={`flex flex-col items-center justify-center py-20 text-center ${animate ? 'animate-fade-in-up' : ''}`}>
+            <div className="text-6xl mb-4 animate-pulse-glow">🔍</div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">
+              No applications found
+            </h3>
+            <p className="text-slate-500 max-w-md font-medium">
+              Try adjusting your search terms.
+            </p>
+          </div>
+        )}
+
+        {!loading && sortedApplications.length > 0 && (
           <div className={`overflow-x-auto rounded-none border border-slate-200 bg-white ${animate ? 'animate-fade-in-up' : ''}`}>
             <table className="w-full border-collapse">
               <thead>

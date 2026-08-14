@@ -25,7 +25,7 @@ export default function RootLayout({
           <SeasonProvider>
             <div className="flex flex-col md:flex-row h-screen">
               <Sidebar />
-              <main id="page-scroll" className="flex-1 overflow-y-auto min-w-0 min-h-0">
+              <main id="page-scroll" className="flex-1 overflow-y-scroll min-w-0 min-h-0">
                 {children}
               </main>
               <ScrollToTop />
