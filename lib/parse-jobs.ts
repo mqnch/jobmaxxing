@@ -1,3 +1,5 @@
+import { LOCATION_JOIN, formatJobLocation } from './locations'
+
 export interface ParsedJob {
   company: string
   role: string
@@ -12,6 +14,8 @@ export interface ParsedJob {
   requires_advanced_degree: boolean
 }
 
+const ARROW_ONLY_RE = /^[\s\u2190-\u21FF\u2900-\u297F🔥]*$/
+
 function stripHtml(html: string): string {
   return html
     .replace(/<[^>]*>/g, '')
@@ -21,7 +25,36 @@ function stripHtml(html: string): string {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
     .trim()
+}
+
+export function isArrowCompanyName(company: string): boolean {
+  const trimmed = company.trim()
+  return trimmed.length > 0 && ARROW_ONLY_RE.test(trimmed)
+}
+
+function extractCompanyName(companyHtml: string): string {
+  const linkMatch = companyHtml.match(/<a[^>]*>([\s\S]*?)<\/a>/i)
+  if (linkMatch) {
+    const linkText = stripHtml(linkMatch[1]).replace(/🔥/g, '').trim()
+    if (linkText && !ARROW_ONLY_RE.test(linkText)) {
+      return linkText
+    }
+  }
+
+  const strongMatch = companyHtml.match(/<strong[^>]*>([\s\S]*?)<\/strong>/i)
+  if (strongMatch) {
+    const strongText = stripHtml(strongMatch[1]).replace(/🔥/g, '').trim()
+    if (strongText && !ARROW_ONLY_RE.test(strongText)) {
+      return strongText
+    }
+  }
+
+  const stripped = stripHtml(companyHtml)
+  const cleaned = stripped.replace(/[\u2190-\u21FF\u2900-\u297F🔥\s]/g, '').trim()
+  return cleaned
 }
 
 function extractUrl(html: string): string {
@@ -36,6 +69,28 @@ function extractUrl(html: string): string {
   }
 
   return ''
+}
+
+function parseLocationHtml(locationHtml: string): string {
+  if (!locationHtml || !locationHtml.trim()) {
+    return ''
+  }
+
+  let html = locationHtml
+  const detailsMatch = html.match(/<details\b[^>]*>[\s\S]*?<\/details>/i)
+  if (detailsMatch) {
+    html = detailsMatch[0]
+      .replace(/<summary\b[^>]*>[\s\S]*?<\/summary>/i, '')
+      .replace(/<\/?details\b[^>]*>/gi, '')
+  }
+
+  return formatJobLocation(
+    stripHtml(html.replace(/<br\s*\/?>/gi, '\n'))
+      .split(/\n+/)
+      .map((part) => part.replace(/\s+/g, ' ').trim())
+      .filter((part) => part.length > 0 && !/^\d+\s+locations?$/i.test(part))
+      .join(LOCATION_JOIN)
+  )
 }
 
 function parseAgeToDate(ageStr: string): string | null {
@@ -121,6 +176,9 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
     const notesIdx = notesIndex !== -1 ? notesIndex : 5
     const termsIdx = termsIndex !== -1 ? termsIndex : -1
 
+    let lastCompany = ''
+    let lastTrending = false
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i]
 
@@ -145,34 +203,20 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
       const notesHtml = notesIdx !== -1 ? (cells[notesIdx] || '') : ''
       const termsHtml = termsIdx !== -1 ? (cells[termsIdx] || '') : ''
 
-      const is_trending = companyHtml.includes('🔥')
+      const rowTrending = companyHtml.includes('🔥')
+      let company = extractCompanyName(companyHtml)
+      const isContinuation =
+        !company && isArrowCompanyName(stripHtml(companyHtml)) && !!lastCompany
 
-      let company = ''
-      
-      const linkMatch = companyHtml.match(/<a[^>]*>([\s\S]*?)<\/a>/i)
-      if (linkMatch) {
-        const linkText = stripHtml(linkMatch[1])
-        if (linkText && linkText.trim().length > 0 && !/^[\s\u2190-\u21FF\u2192]*$/.test(linkText)) {
-          company = linkText.trim()
-        }
+      if (isContinuation) {
+        company = lastCompany
       }
-      
-      if (!company || company.trim().length === 0) {
-        const strongMatch = companyHtml.match(/<strong[^>]*>([\s\S]*?)<\/strong>/i)
-        if (strongMatch) {
-          const strongText = stripHtml(strongMatch[1])
-          if (strongText && strongText.trim().length > 0 && !/^[\s\u2190-\u21FF\u2192]*$/.test(strongText)) {
-            company = strongText.trim()
-          }
-        }
-      }
-      
-      if (!company || company.trim().length === 0) {
-        const stripped = stripHtml(companyHtml)
-        const cleaned = stripped.replace(/[\u2190-\u21FF\u2192\s]*/g, '').trim()
-        if (cleaned && cleaned.length > 0) {
-          company = cleaned
-        }
+
+      const is_trending = isContinuation ? lastTrending || rowTrending : rowTrending
+
+      if (company && !isArrowCompanyName(company)) {
+        lastCompany = company
+        lastTrending = is_trending
       }
 
       const no_sponsorship = roleHtml.includes('🛂')
@@ -188,22 +232,7 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
         role = `${role} (${terms})`
       }
 
-      let location = stripHtml(locationHtml)
-      
-      if (location && location.length > 0) {
-        const locationPattern = /([A-Z][a-zA-Z\s]+,\s*[A-Z]{2}(?:,\s*[A-Z][a-zA-Z\s]+)?)/g
-        const matches = location.match(locationPattern)
-        
-        if (matches && matches.length > 1) {
-          location = matches.join(', ')
-        } else {
-          const splitPattern = /([A-Z][a-zA-Z\s]+,\s*[A-Z]{2}(?:,\s*[A-Z][a-zA-Z\s]+)?)(?=[A-Z][a-z])/g
-          const parts = location.split(splitPattern).filter(p => p.trim().length > 0)
-          if (parts.length > 1) {
-            location = parts.join(', ')
-          }
-        }
-      }
+      const location = parseLocationHtml(locationHtml)
 
       const url = extractUrl(applicationHtml)
 
@@ -212,7 +241,7 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
 
       const description = stripHtml(notesHtml || '')
 
-      if (!company || !role || !url) {
+      if (!company || !role) {
         continue
       }
 

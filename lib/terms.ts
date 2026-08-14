@@ -28,3 +28,10 @@ export function statusForRounds(status: string, rounds: number): string {
   }
   return status
 }
+
+const ROLE_TERMS_SUFFIX =
+  /\s*\((?:Summer|Winter|Spring|Fall|Autumn)\s+\d{4}(?:,\s*(?:Summer|Winter|Spring|Fall|Autumn)\s+\d{4})*\)\s*$/i
+
+export function displayRole(role: string) {
+  return role.replace(ROLE_TERMS_SUFFIX, '').trim()
+}

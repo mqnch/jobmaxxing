@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNowStrict, parseISO } from 'date-fns'
+import CompanyLogo from '@/components/CompanyLogo'
+import { formatJobLocation } from '@/lib/locations'
+import { displayRole } from '@/lib/terms'
 
 interface JobCardProps {
   id: string
@@ -57,73 +60,10 @@ const formatDatePosted = (dateString?: string) => {
   }
 }
 
-const formatLocation = (location: string): string => {
-  if (!location || !location.trim()) {
-    return location
-  }
-
-  let fixedLocation = location.replace(/([a-z])([A-Z][a-z]+)/g, '$1, $2')
-
-  const parts = fixedLocation
-    .split(',')
-    .map(part => part.trim())
-    .filter(part => part.length > 0)
-
-  if (parts.length >= 6) {
-    const locations: string[] = []
-    let currentLocation: string[] = []
-    
-    const commonCountries = new Set(['Canada', 'USA', 'United States', 'United Kingdom', 'UK', 'Mexico', 'Australia', 'Germany', 'France', 'India', 'China', 'Japan'])
-    
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i]
-      currentLocation.push(part)
-      
-      const isStateCode = /^[A-Z]{2}$/.test(part)
-      const isCountry = commonCountries.has(part)
-      
-      if (i < parts.length - 1) {
-        const nextPart = parts[i + 1]
-        const nextIsStateCode = /^[A-Z]{2}$/.test(nextPart)
-        const nextIsCountry = commonCountries.has(nextPart)
-        const nextIsCity = !nextIsStateCode && !nextIsCountry && /^[A-Z][a-z]/.test(nextPart)
-        
-        if (currentLocation.length >= 3 && nextIsCity) {
-          locations.push(currentLocation.join(', '))
-          currentLocation = []
-          continue
-        }
-        
-        if (currentLocation.length === 2 && isCountry && nextIsCity) {
-          locations.push(currentLocation.join(', '))
-          currentLocation = []
-          continue
-        }
-        
-        if (isStateCode && currentLocation.length >= 2 && nextIsCity && !nextIsCountry) {
-          locations.push(currentLocation.join(', '))
-          currentLocation = []
-          continue
-        }
-      }
-    }
-    
-    if (currentLocation.length > 0) {
-      locations.push(currentLocation.join(', '))
-    }
-    
-    if (locations.length > 1) {
-      return locations.join(' — ')
-    }
-  }
-
-  return fixedLocation
-}
-
 const MAX_LOCATION_CHARS = 72
 
 function displayLocation(location: string): { text: string; full: string } {
-  const full = formatLocation(location)
+  const full = formatJobLocation(location)
   const parts = full.split(/\s+[—–]\s+/).map((part) => part.trim()).filter(Boolean)
 
   let text = full
@@ -308,10 +248,8 @@ export default function JobCard({
     return (
       <div className="w-full p-4 md:p-5 rounded-none border border-slate-200/80 bg-white hover:bg-slate-50/50 hover:border-slate-300 transition-all duration-200">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start md:items-center gap-3 flex-1 min-w-0">
-            <div className="hidden md:flex items-center justify-center w-9 h-9 rounded-none bg-slate-100 text-base shrink-0" title={season === 'winter' ? 'Winter internship' : 'Summer internship'}>
-              {season === 'winter' ? '❄️' : '☀️'}
-            </div>
+          <div className="flex items-stretch gap-3 flex-1 min-w-0">
+            <CompanyLogo company={company} season={season} size="lg" className="hidden md:flex" />
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -333,7 +271,7 @@ export default function JobCard({
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm min-w-0">
-                <p className="font-semibold text-slate-700 truncate sm:max-w-[46%]">{role}</p>
+                <p className="font-semibold text-slate-700 truncate sm:max-w-[46%]" title={displayRole(role)}>{displayRole(role)}</p>
                 <span className="hidden sm:inline text-slate-300">•</span>
                 <p className="text-slate-500 flex items-center gap-1 min-w-0 max-w-[40%]">
                   <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -442,30 +380,33 @@ export default function JobCard({
     <div className="h-full p-6 rounded-none border border-slate-200 bg-white hover:bg-slate-50/50 hover:border-slate-300 transition-all duration-200">
       <div className="flex flex-col h-full">
         <div className="flex-1">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-lg font-bold text-slate-800 tracking-tight">
-                  {company}
-                </h3>
-                <JobFlagBadges
-                  is_trending={is_trending}
-                  no_sponsorship={no_sponsorship}
-                  requires_us_citizenship={requires_us_citizenship}
-                  requires_advanced_degree={requires_advanced_degree}
-                  textSizeClass="text-lg"
-                />
-                {isNew && (
-                  <span className="px-2 py-0.5 text-xs font-semibold text-white bg-red-600 rounded-none">
-                    NEW
-                  </span>
+          <div className="flex items-start justify-between mb-2 gap-3">
+            <div className="flex items-stretch gap-3 min-w-0 flex-1">
+              <CompanyLogo company={company} season={season} size="lg" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-lg font-bold text-slate-800 tracking-tight">
+                    {company}
+                  </h3>
+                  <JobFlagBadges
+                    is_trending={is_trending}
+                    no_sponsorship={no_sponsorship}
+                    requires_us_citizenship={requires_us_citizenship}
+                    requires_advanced_degree={requires_advanced_degree}
+                    textSizeClass="text-lg"
+                  />
+                  {isNew && (
+                    <span className="px-2 py-0.5 text-xs font-semibold text-white bg-red-600 rounded-none">
+                      NEW
+                    </span>
+                  )}
+                </div>
+                {(date_posted || created_at) && (
+                  <p className="text-xs text-slate-400 mt-1 font-medium">
+                    Posted {formatDatePosted(date_posted || created_at)}
+                  </p>
                 )}
               </div>
-              {(date_posted || created_at) && (
-                <p className="text-xs text-slate-400 mt-1 font-medium">
-                  Posted {formatDatePosted(date_posted || created_at)}
-                </p>
-              )}
             </div>
             {isAuthenticated && (
               <button
@@ -494,7 +435,7 @@ export default function JobCard({
               </button>
             )}
           </div>
-          <p className="text-base font-semibold text-slate-700 mb-2 leading-snug">{role}</p>
+          <p className="text-base font-semibold text-slate-700 mb-2 leading-snug" title={displayRole(role)}>{displayRole(role)}</p>
           <p className="text-sm text-slate-500 mb-4 flex items-start gap-1.5 min-w-0">
             <svg className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />

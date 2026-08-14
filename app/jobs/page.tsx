@@ -7,6 +7,7 @@ import PageHeader from '@/components/PageHeader'
 import { hasPlayed, markPlayed } from '@/lib/animationState'
 import { useSeason } from '@/lib/season-context'
 import { JOBS_SYNCED_EVENT, syncLatestJobs, type JobsSyncDetail } from '@/lib/job-sync'
+import { prefetchCompanyLogos } from '@/lib/company-logos'
 import { formatDistanceToNowStrict } from 'date-fns'
 
 interface Job {
@@ -341,6 +342,10 @@ export default function JobsPage() {
 
     fetchJobs()
   }, [debouncedQuery, showTrendingOnly, showPostgradOnly, showNoSponsorshipOnly, showCitizenshipOnly, syncTrigger, season])
+
+  useEffect(() => {
+    prefetchCompanyLogos(jobs.map((job) => job.company))
+  }, [jobs])
 
   const loadMore = useCallback(async () => {
     if (loading || isLoadingMore || !hasMore || loadingMoreLockRef.current) return

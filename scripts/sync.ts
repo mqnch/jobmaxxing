@@ -13,6 +13,7 @@ async function main() {
     console.log(`Parsed:      ${stats.totalParsed} jobs total`)
     console.log(`Inserted:    ${stats.inserted} new jobs`)
     console.log(`Updated:     ${stats.updated} existing jobs`)
+    console.log(`Rematched:   ${stats.rematched} arrow company names`)
     console.log(`Deactivated: ${stats.deactivated} removed/old jobs`)
     if (stats.warnings) {
       console.warn(`⚠️ Warnings:  ${stats.warnings}`)

@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { hasPlayed, markPlayed } from '@/lib/animationState'
 import PageHeader from '@/components/PageHeader'
-import { currentTerms, roundsForStatus, statusForRounds } from '@/lib/terms'
+import CompanyLogo from '@/components/CompanyLogo'
+import { prefetchCompanyLogos } from '@/lib/company-logos'
+import { currentTerms, displayRole, roundsForStatus, statusForRounds } from '@/lib/terms'
+import { formatJobLocation } from '@/lib/locations'
 
 interface Application {
   job_id: string
@@ -110,6 +113,10 @@ export default function ApplicationsPage() {
 
     fetchApplications()
   }, [user, router])
+
+  useEffect(() => {
+    prefetchCompanyLogos(applications.map((app) => app.company))
+  }, [applications])
 
   const sortedApplications = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -466,12 +473,15 @@ export default function ApplicationsPage() {
                   } : undefined}
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-slate-900 font-bold">{app.company}</p>
-                      <p className="text-sm text-slate-700 font-semibold mt-1 break-words">
-                        {app.role}
+                    <div className="flex items-start gap-3 min-w-0">
+                      <CompanyLogo company={app.company} />
+                      <div className="min-w-0">
+                      <p className="text-slate-900 font-bold truncate">{app.company}</p>
+                      <p className="text-sm text-slate-700 font-semibold mt-1 truncate" title={displayRole(app.role)}>
+                        {displayRole(app.role)}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">{app.location}</p>
+                      <p className="text-xs text-slate-500 mt-1">{formatJobLocation(app.location)}</p>
+                      </div>
                     </div>
                     <button
                       onClick={() => handleRemove(app.job_id)}
@@ -533,11 +543,11 @@ export default function ApplicationsPage() {
             </div>
 
             <div className={`hidden md:block overflow-x-auto rounded-none border border-slate-200 bg-white ${animate ? 'animate-fade-in-up' : ''}`}>
-              <table className="w-full border-collapse">
+              <table className="w-full table-fixed border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-100">
                     <th
-                      className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+                      className="w-[22%] text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
                       onClick={() => handleSort('company')}
                     >
                       <div className="flex items-center gap-1">
@@ -545,18 +555,18 @@ export default function ApplicationsPage() {
                       </div>
                     </th>
                     <th
-                      className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+                      className="w-[32%] text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
                       onClick={() => handleSort('role')}
                     >
                       <div className="flex items-center gap-1">
                         Role <SortIcon column="role" />
                       </div>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-bold text-slate-700 whitespace-nowrap">
+                    <th className="text-left py-3 px-3 text-sm font-bold text-slate-700 whitespace-nowrap">
                       Location
                     </th>
                     <th
-                      className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+                      className="w-28 text-left py-3 px-3 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                       onClick={() => handleSort('status')}
                     >
                       <div className="flex items-center gap-1">
@@ -564,7 +574,7 @@ export default function ApplicationsPage() {
                       </div>
                     </th>
                     <th
-                      className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+                      className="w-20 text-left py-3 px-2 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                       onClick={() => handleSort('interview_rounds')}
                     >
                       <div className="flex items-center gap-1">
@@ -572,22 +582,22 @@ export default function ApplicationsPage() {
                       </div>
                     </th>
                     <th
-                      className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+                      className="w-24 text-left py-3 px-2 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                       onClick={() => handleSort('applied_at')}
                     >
                       <div className="flex items-center gap-1">
-                        Date Applied <SortIcon column="applied_at" />
+                        Applied <SortIcon column="applied_at" />
                       </div>
                     </th>
                     <th
-                      className="text-left py-3 px-4 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
+                      className="w-24 text-left py-3 px-2 text-sm font-bold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors whitespace-nowrap"
                       onClick={() => handleSort('last_heard_at')}
                     >
                       <div className="flex items-center gap-1">
-                        Last Heard <SortIcon column="last_heard_at" />
+                        Heard <SortIcon column="last_heard_at" />
                       </div>
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-bold text-slate-700 whitespace-nowrap">
+                    <th className="w-32 text-left py-3 px-3 text-sm font-bold text-slate-700 whitespace-nowrap">
                       Actions
                     </th>
                   </tr>
@@ -603,21 +613,26 @@ export default function ApplicationsPage() {
                       } : undefined}
                     >
                       <td className="py-4 px-4 text-slate-900 font-bold">
-                        {app.company}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <CompanyLogo company={app.company} />
+                          <span className="truncate" title={app.company}>{app.company}</span>
+                        </div>
                       </td>
                       <td className="py-4 px-4 text-slate-700 font-semibold">
-                        {app.role}
+                        <span className="block truncate" title={displayRole(app.role)}>
+                          {displayRole(app.role)}
+                        </span>
                       </td>
-                      <td className="py-4 px-4 text-slate-500 text-sm">
-                        {app.location}
+                      <td className="py-4 px-3 text-slate-500 text-sm truncate" title={formatJobLocation(app.location)}>
+                        {formatJobLocation(app.location)}
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-3">
                         <select
                           value={app.status || 'not_applied'}
                           onChange={(e) =>
                             handleStatusChange(app.job_id, e.target.value)
                           }
-                          className="px-3 py-1.5 bg-slate-100/60 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:bg-white transition-colors duration-200"
+                          className="w-full px-2 py-1.5 bg-slate-100/60 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:bg-white transition-colors duration-200"
                         >
                           {STATUS_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -626,13 +641,13 @@ export default function ApplicationsPage() {
                           ))}
                         </select>
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-2">
                         <select
                           value={app.interview_rounds ?? 0}
                           onChange={(e) =>
                             handleRoundsChange(app.job_id, Number(e.target.value))
                           }
-                          className="px-3 py-1.5 bg-slate-100/60 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:bg-white transition-colors duration-200"
+                          className="w-full px-1 py-1.5 bg-slate-100/60 rounded-none text-sm text-slate-700 font-semibold focus:outline-none focus:bg-white transition-colors duration-200"
                         >
                           {ROUND_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -641,13 +656,13 @@ export default function ApplicationsPage() {
                           ))}
                         </select>
                       </td>
-                      <td className="py-4 px-4 text-slate-600 text-sm font-medium">
+                      <td className="py-4 px-2 text-slate-600 text-sm font-medium whitespace-nowrap">
                         {formatDate(app.applied_at)}
                       </td>
-                      <td className="py-4 px-4 text-slate-600 text-sm font-medium">
+                      <td className="py-4 px-2 text-slate-600 text-sm font-medium whitespace-nowrap">
                         {formatDate(app.last_heard_at)}
                       </td>
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-3">
                         <div className="flex items-center gap-2">
                           <a
                             href={app.url}
