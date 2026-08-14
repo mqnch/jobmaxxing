@@ -212,7 +212,7 @@ export function parseJobsFromMarkdown(markdown: string): ParsedJob[] {
         company = lastCompany
       }
 
-      const is_trending = isContinuation ? lastTrending || rowTrending : rowTrending
+      const is_trending: boolean = isContinuation ? lastTrending || rowTrending : rowTrending
 
       if (company && !isArrowCompanyName(company)) {
         lastCompany = company

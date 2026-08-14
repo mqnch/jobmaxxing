@@ -126,7 +126,7 @@ async function fetchAllJobs<T extends Record<string, unknown>>(
       .select(columns)
       .range(from, from + pageSize - 1)
     if (error) throw error
-    rows.push(...((data || []) as T[]))
+    rows.push(...((data || []) as unknown as T[]))
     if (!data || data.length < pageSize) break
   }
   return rows
@@ -334,8 +334,9 @@ export async function runSync(): Promise<SyncStats> {
   }
 
   const newHashes = new Set<string>()
-  const jobsToUpsert: Record<string, unknown>[] = []
-  const jobsToRelocate: { id: string; payload: Record<string, unknown> }[] = []
+  type JobPayload = { hash: string } & Record<string, unknown>
+  const jobsToUpsert: JobPayload[] = []
+  const jobsToRelocate: { id: string; payload: JobPayload }[] = []
   const now = new Date().toISOString()
   const claimedIds = new Set<string>()
 
@@ -377,7 +378,7 @@ export async function runSync(): Promise<SyncStats> {
   let updated = 0
   let batchErrors: any[] = []
 
-  const relocateOne = async (row: { id: string; payload: Record<string, unknown> }) => {
+  const relocateOne = async (row: { id: string; payload: JobPayload }) => {
     const { error: updateError } = await supabase
       .from('jobs')
       .update(row.payload)
