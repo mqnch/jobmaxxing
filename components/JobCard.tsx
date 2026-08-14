@@ -27,6 +27,7 @@ interface JobCardProps {
   onStatusChange?: (status: string) => void
   isAuthenticated?: boolean
   viewMode?: 'card' | 'list'
+  autoSaveOnApply?: boolean
 }
 
 const STATUS_OPTIONS = [
@@ -135,6 +136,7 @@ export default function JobCard({
   onStatusChange,
   isAuthenticated = false,
   viewMode = 'card',
+  autoSaveOnApply = true,
 }: JobCardProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -215,7 +217,7 @@ export default function JobCard({
   }
 
   const handleApply = () => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || !autoSaveOnApply) return
 
     const currentStatus = status || 'not_applied'
     const shouldMarkApplied = currentStatus === 'not_applied'

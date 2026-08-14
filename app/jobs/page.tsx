@@ -38,6 +38,7 @@ type ViewMode = 'card' | 'list'
 
 const VIEW_MODE_DESKTOP_KEY = 'jobsViewMode'
 const VIEW_MODE_MOBILE_KEY = 'jobsViewModeMobile'
+const AUTO_SAVE_ON_APPLY_KEY = 'autoSaveOnApply'
 
 function isMobileViewport() {
   return typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
@@ -77,6 +78,7 @@ export default function JobsPage() {
   const [showCitizenshipOnly, setShowCitizenshipOnly] = useState(false)
   const [lastVisitTimestamp, setLastVisitTimestamp] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
+  const [autoSaveOnApply, setAutoSaveOnApply] = useState(true)
   const [animate, setAnimate] = useState(true)
   const limit = 50
 
@@ -144,6 +146,11 @@ export default function JobsPage() {
 
     setViewMode(getDefaultViewMode())
 
+    const storedAutoSave = localStorage.getItem(AUTO_SAVE_ON_APPLY_KEY)
+    if (storedAutoSave === 'true' || storedAutoSave === 'false') {
+      setAutoSaveOnApply(storedAutoSave === 'true')
+    }
+
     if (hasPlayed('jobs')) {
       setAnimate(false)
     } else {
@@ -201,6 +208,11 @@ export default function JobsPage() {
   const changeViewMode = (mode: ViewMode) => {
     setViewMode(mode)
     localStorage.setItem(getViewModeStorageKey(), mode)
+  }
+
+  const changeAutoSaveOnApply = (enabled: boolean) => {
+    setAutoSaveOnApply(enabled)
+    localStorage.setItem(AUTO_SAVE_ON_APPLY_KEY, String(enabled))
   }
 
   useEffect(() => {
@@ -583,6 +595,34 @@ export default function JobsPage() {
             🇺🇸<span className="hidden md:inline"> US Citizenship</span>
           </button>
 
+          {user && (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autoSaveOnApply}
+              onClick={() => changeAutoSaveOnApply(!autoSaveOnApply)}
+              title="Automatically save and mark as applied when you click Apply"
+              className={`inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-none border text-sm font-bold transition-colors duration-200 ${
+                autoSaveOnApply
+                  ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
+                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span
+                className={`relative inline-flex h-4 w-7 shrink-0 items-center ${
+                  autoSaveOnApply ? 'bg-white/25' : 'bg-slate-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-3 w-3 bg-current transition-transform duration-200 ${
+                    autoSaveOnApply ? 'translate-x-3.5 text-white' : 'translate-x-0.5 text-slate-500'
+                  }`}
+                />
+              </span>
+              <span>Auto-save on Apply</span>
+            </button>
+          )}
+
           <div className="flex items-center justify-between gap-4 w-full md:w-auto md:ml-auto md:justify-start">
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-400 font-medium">Sort by:</span>
@@ -689,6 +729,7 @@ export default function JobsPage() {
                     <JobCard
                       {...job}
                       viewMode={viewMode}
+                      autoSaveOnApply={autoSaveOnApply}
                       isAuthenticated={!!user}
                       isSaved={userJob?.saved || false}
                       status={userJob?.status}
